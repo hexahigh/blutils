@@ -4,6 +4,7 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	_ "embed"
 	"log"
 	"os"
 
@@ -21,6 +22,9 @@ var rootCmd = &cobra.Command{
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
+//go:embed version
+var version string
+
 var rootParams RootParams
 var logger *log.Logger
 
@@ -33,12 +37,14 @@ type RootParams struct {
 }
 
 func init() {
-
 	rootParams.Verbosity = rootCmd.PersistentFlags().IntP("verbosity", "v", 2, "Verbosity level (0-3)")
 	rootParams.NoColor = rootCmd.PersistentFlags().Bool("no-color", false, "Disable color output in log")
 	rootParams.TrueColor = rootCmd.PersistentFlags().Bool("true-color", false, "Force true color output in log")
+	rootCmd.ParseFlags(os.Args[1:])
 
 	logger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	verbosePrintln(0, "verbosity", *rootParams.Verbosity)
 
 	if !*rootParams.NoColor {
 		red := color.Red
