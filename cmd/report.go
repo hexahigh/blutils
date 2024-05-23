@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	color "github.com/hexahigh/go-lib/ansicolor"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -75,6 +76,7 @@ var reportCmd = &cobra.Command{
 
 		var out_file string
 
+		//* Functions
 		executeCmd := func(cmd *exec.Cmd) ([]byte, error) {
 			var out bytes.Buffer
 			cmd.Stdout = &out
@@ -92,6 +94,14 @@ var reportCmd = &cobra.Command{
 			return result
 		}
 
+		printSuccess := func(msg string) {
+			verbosePrintlnC(2, color.Green+"[OK]"+color.Reset, msg)
+		}
+
+		printFailure := func(msg string) {
+			verbosePrintlnC(1, color.Red+"[FAIL]"+color.Reset, msg)
+		}
+
 		var fileType string
 		if *reportParams.Yaml {
 			fileType = "yaml"
@@ -106,14 +116,19 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		verbosePrintln(1, "Filetype:", fileType)
-		verbosePrintln(1, "Output file:", out_file)
+		if *reportParams.OutFile == "-" {
+			*reportParams.Stdout = true
+		}
+
+		verbosePrintln(3, "Filetype:", fileType)
+		verbosePrintln(3, "Output file:", out_file)
 
 		// Get CPU Info
-		verbosePrintln(1, "Getting CPU Info...")
+		verbosePrintln(3, "Getting CPU Info...")
 		cpuInfo, err := os.Open("/proc/cpuinfo")
 		if err != nil {
-			verbosePrintln(0, "Error opening /proc/cpuinfo:", err)
+			printFailure("cpuinfo")
+			verbosePrintln(3, "Error opening /proc/cpuinfo:", err)
 		} else {
 			defer cpuInfo.Close()
 
@@ -129,16 +144,19 @@ var reportCmd = &cobra.Command{
 				}
 			}
 			if err := scanner.Err(); err != nil {
-				verbosePrintln(0, "Error reading /proc/cpuinfo:", err)
+				printFailure("cpuinfo")
+				verbosePrintln(3, "Error reading /proc/cpuinfo:", err)
 				return
 			}
+			printSuccess("cpuinfo")
 		}
 
 		// Get OS Info
-		verbosePrintln(1, "Getting OS Info...")
+		verbosePrintln(3, "Getting OS Info...")
 		osInfo, err := os.Open("/etc/os-release")
 		if err != nil {
-			verbosePrintln(0, "Error opening /etc/os-release:", err)
+			printFailure("os-release")
+			verbosePrintln(3, "Error opening /etc/os-release:", err)
 		} else {
 			defer osInfo.Close()
 
@@ -155,16 +173,19 @@ var reportCmd = &cobra.Command{
 			}
 
 			if err := scanner.Err(); err != nil {
-				verbosePrintln(0, "Error reading /etc/os-release:", err)
+				printFailure("os-release")
+				verbosePrintln(3, "Error reading /etc/os-release:", err)
 				return
 			}
+			printSuccess("os-release")
 		}
 
 		// Get mem info
-		verbosePrintln(1, "Getting Memory Info...")
+		verbosePrintln(3, "Getting Memory Info...")
 		memInfo, err := os.Open("/proc/meminfo")
 		if err != nil {
-			verbosePrintln(0, "Error opening /proc/meminfo:", err)
+			printFailure("meminfo")
+			verbosePrintln(3, "Error opening /proc/meminfo:", err)
 		} else {
 			defer cpuInfo.Close()
 
@@ -181,13 +202,15 @@ var reportCmd = &cobra.Command{
 			}
 
 			if err := scanner.Err(); err != nil {
-				verbosePrintln(0, "Error reading /proc/meminfo:", err)
+				printFailure("meminfo")
+				verbosePrintln(3, "Error reading /proc/meminfo:", err)
 				return
 			}
+			printSuccess("meminfo")
 		}
 
 		// Get env
-		verbosePrintln(1, "Getting Environment Variables...")
+		verbosePrintln(3, "Getting Environment Variables...")
 		envMap := make(map[string]string)
 		for _, envVar := range os.Environ() {
 			parts := strings.SplitN(envVar, "=", 2)
@@ -197,12 +220,14 @@ var reportCmd = &cobra.Command{
 				envMap[key] = val
 			}
 		}
+		printSuccess("env")
 
 		// Get swap info
-		verbosePrintln(1, "Getting Swap Info...")
+		verbosePrintln(3, "Getting Swap Info...")
 		swapInfo, err := os.Open("/proc/swaps")
 		if err != nil {
-			verbosePrintln(0, "Error opening /proc/swaps:", err)
+			printFailure("swapinfo")
+			verbosePrintln(3, "Error opening /proc/swaps:", err)
 		} else {
 			defer swapInfo.Close()
 
@@ -219,33 +244,40 @@ var reportCmd = &cobra.Command{
 			}
 
 			if err := scanner.Err(); err != nil {
-				verbosePrintln(0, "Error reading /proc/swaps:", err)
+				printFailure("swapinfo")
+				verbosePrintln(3, "Error reading /proc/swaps:", err)
 				return
 			}
+			printSuccess("swapinfo")
 		}
 
 		// Execute lsblk -J
-		verbosePrintln(1, "Executing lsblk -J...")
+		verbosePrintln(3, "Executing lsblk -J...")
 		command := exec.Command("lsblk", "-J")
 		out, err := executeCmd(command)
 		if err != nil {
-			verbosePrintln(0, "Error executing lsblk -J:", err)
+			printFailure("lsblk")
+			verbosePrintln(3, "Error executing lsblk -J:", err)
 		} else {
 
 			// Parse lsblk output
 			err = json.Unmarshal(out, &lsblkOutput)
 			if err != nil {
-				verbosePrintln(0, "Error parsing lsblk output:", err)
+				printFailure("lsblk")
+				verbosePrintln(3, "Error parsing lsblk output:", err)
 				return
 			}
+
+			printSuccess("lsblk")
 		}
 
 		// Lscpu
-		verbosePrintln(1, "Executing lscpu...")
+		verbosePrintln(3, "Executing lscpu...")
 		command = exec.Command("lscpu")
 		out, err = executeCmd(command)
 		if err != nil {
-			verbosePrintln(0, "Error executing lscpu", err)
+			printFailure("lscpu")
+			verbosePrintln(3, "Error executing lscpu", err)
 		} else {
 			defer cpuInfo.Close()
 
@@ -262,19 +294,23 @@ var reportCmd = &cobra.Command{
 			}
 
 			if err := scanner.Err(); err != nil {
-				verbosePrintln(0, "Error executing lscpu", err)
+				printFailure("lscpu")
+				verbosePrintln(3, "Error executing lscpu", err)
 				return
 			}
+
+			printSuccess("lscpu")
 		}
 
 		// Get installed packages
-		verbosePrintln(1, "Getting installed packages...")
+		verbosePrintln(3, "Getting installed packages...")
 		switch osMap["ID"] {
 		case "ubuntu", "debian":
 			command = exec.Command("dpkg", "--get-selections")
 			out, err = executeCmd(command)
 			if err != nil {
-				verbosePrintln(0, "Error executing dpkg --get-selections:", err)
+				printFailure("pkg")
+				verbosePrintln(3, "Error executing dpkg --get-selections:", err)
 				return
 			}
 			installedPackages = strings.Split(string(out), "\n")
@@ -284,16 +320,19 @@ var reportCmd = &cobra.Command{
 					installedPackages[i] = fields[0] // Take the first field, which is the package name
 				}
 			}
+			printSuccess("pkg")
 		case "rhel":
 			command = exec.Command("rpm", "-qa")
 			out, err = executeCmd(command)
 			if err != nil {
-				verbosePrintln(0, "Error executing rpm -qa:", err)
+				printFailure("pkg")
+				verbosePrintln(3, "Error executing rpm -qa:", err)
 				return
 			}
 			installedPackages = strings.Split(string(out), "\n")
 		default:
-			verbosePrintln(0, "Unsupported/Unknown OS:", osMap["ID"])
+			printFailure("pkg")
+			verbosePrintln(3, "Unsupported/Unknown OS:", osMap["ID"])
 			return
 		}
 
@@ -304,14 +343,21 @@ var reportCmd = &cobra.Command{
 		command = exec.Command("nproc")
 		out, err = executeCmd(command)
 		if err != nil {
-			verbosePrintln(0, "Error executing nproc:", err)
+			printFailure("nproc")
+			verbosePrintln(3, "Error executing nproc:", err)
 			return
+		} else {
+			printSuccess("nproc")
+			defer cpuInfo.Close()
 		}
 		nproc := strings.TrimSpace(string(out))
 		nprocInt, err := strconv.Atoi(nproc)
 		if err != nil {
-			verbosePrintln(0, "Error converting nproc to integer:", err)
+			printFailure("nproc")
+			verbosePrintln(3, "Error converting nproc to integer:", err)
 			return
+		} else {
+			printSuccess("nproc")
 		}
 
 		report := &SystemReport{
@@ -327,7 +373,7 @@ var reportCmd = &cobra.Command{
 		}
 
 		// Marshal the report to either JSON or YAML
-		verbosePrintln(1, "Marshalling report...")
+		verbosePrintln(3, "Marshalling report...")
 		var data []byte
 		switch fileType {
 		case "yaml":
@@ -349,7 +395,7 @@ var reportCmd = &cobra.Command{
 			}
 		}
 
-		if *reportParams.Stdout || *reportParams.OutFile == "-" {
+		if *reportParams.Stdout {
 			fmt.Print(string(data))
 			return
 		} else {
@@ -360,9 +406,9 @@ var reportCmd = &cobra.Command{
 				return
 			}
 
-			verbosePrintln(0, "System report completed.")
-			verbosePrintln(0, "Report written to:", out_file)
-			verbosePrintln(0, "NOTE: The system report contains environment variables, installed packages and more! You may want to review the report if you are planning on sharing it.")
+			verbosePrintln(2, "System report completed.")
+			verbosePrintln(2, "Report written to:", out_file)
+			verbosePrintln(1, "The system report contains environment variables, installed packages and more! You may want to review the report if you are planning on sharing it.")
 		}
 	},
 }

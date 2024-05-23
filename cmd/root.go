@@ -44,8 +44,6 @@ func init() {
 
 	logger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
-	verbosePrintln(0, "verbosity", *rootParams.Verbosity)
-
 	if !*rootParams.NoColor {
 		red := color.Red
 		yellow := color.Yellow
@@ -84,5 +82,12 @@ func verbosePrintf(minLevel int, format string, msg ...any) {
 	if *rootParams.Verbosity >= minLevel {
 		msg = append([]any{"[" + verbosityMap[minLevel] + "]"}, msg...)
 		logger.Printf(format, msg...)
+	}
+}
+
+// Prints your message without any log level stuff
+func verbosePrintlnC(minLevel int, msg ...any) {
+	if *rootParams.Verbosity >= minLevel {
+		logger.Println(msg...)
 	}
 }
