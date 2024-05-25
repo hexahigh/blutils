@@ -19,9 +19,6 @@ var rootCmd = &cobra.Command{
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-//go:embed version
-var version string
-
 var rootParams RootParams
 var logger *log.Logger
 
@@ -65,26 +62,5 @@ func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
-	}
-}
-
-func verbosePrintln(minLevel int, msg ...any) {
-	if *rootParams.Verbosity >= minLevel {
-		msg = append([]any{"[" + verbosityMap[minLevel] + "]"}, msg...)
-		logger.Println(msg...)
-	}
-}
-
-func verbosePrintf(minLevel int, format string, msg ...any) {
-	if *rootParams.Verbosity >= minLevel {
-		msg = append([]any{"[" + verbosityMap[minLevel] + "]"}, msg...)
-		logger.Printf(format, msg...)
-	}
-}
-
-// Prints your message without any log level stuff
-func verbosePrintlnC(minLevel int, msg ...any) {
-	if *rootParams.Verbosity >= minLevel {
-		logger.Println(msg...)
 	}
 }
