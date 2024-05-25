@@ -1,6 +1,3 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -20,14 +17,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Params struct {
+type ReportParams struct {
 	Yaml    *bool
 	Json    *bool
 	Stdout  *bool
 	OutFile *string
 }
 
-var reportParams Params
+var reportParams ReportParams
 
 func init() {
 	rootCmd.AddCommand(reportCmd)
