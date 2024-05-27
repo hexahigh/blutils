@@ -1,0 +1,9 @@
+Source: blutils
+Section: devel
+Priority: optional
+Maintainer: Boofdev <hexahigh0@gmail.com>
+Build-Depends: debhelper (>= 10)
+
+Package: blutils
+Architecture: amd64
+Description: Utility program

@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+clean:
+	rm -rf ./deb
+
+build:
+	make release
+
+binary:
+	mkdir -p debian/blutils
+	mkdir -p debian/blutils/usr/bin
+	cp blutils debian/blutils/usr/bin/blutils
+	dh_gencontrol
+	mkdir deb
+	dh_builddeb
