@@ -99,6 +99,10 @@ var reportCmd = &cobra.Command{
 			verbosePrintlnC(1, color.Red+"[FAIL]"+color.Reset, msg)
 		}
 
+		if *reportParams.Stdout || *reportParams.OutFile == "-" {
+			*rootParams.Verbosity = -1
+		}
+
 		var fileType string
 		if *reportParams.Yaml {
 			fileType = "yaml"
