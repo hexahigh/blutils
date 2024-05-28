@@ -2,10 +2,11 @@ package cmd
 
 import (
 	_ "embed"
+	"strings"
 )
 
 //go:embed version
-var version string
+var versionFile string
 
 func verbosePrintln(minLevel int, msg ...any) {
 	if *rootParams.Verbosity >= minLevel {
@@ -26,4 +27,14 @@ func verbosePrintlnC(minLevel int, msg ...any) {
 	if *rootParams.Verbosity >= minLevel {
 		logger.Println(msg...)
 	}
+}
+
+func versionParser(key string) string {
+	for _, l := range strings.Split(versionFile, "\n") {
+		parts := strings.SplitN(l, ":", 2)
+		if len(parts) == 2 && parts[0] == key {
+			return strings.TrimSpace(parts[1])
+		}
+	}
+	return ""
 }
