@@ -43,11 +43,16 @@ var benchCmd = &cobra.Command{
 		done := make(chan bool)
 
 		go func() {
+			verbosePrintln(3, "Starting timeout")
 			if *benchParams.Timeout > 0 {
 				time.Sleep(time.Duration(*benchParams.Timeout) * time.Second)
 				cancel()
 			}
 		}()
+
+		if *benchParams.CpuWorkers > 0 {
+			fmt.Printf("Starting %d CPU workers\n", *benchParams.CpuWorkers)
+		}
 
 		for i := 0; i < *benchParams.CpuWorkers; i++ {
 			wg.Add(1)
