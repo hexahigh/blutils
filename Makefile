@@ -11,6 +11,8 @@ release:
     # Remove empty lines from the version file
 	sed -i '/^$$/d' cmd/version
 
+	cat cmd/version | sort | uniq > cmd/version
+
 	go build -ldflags="-w -s" -o blutils
 
     # Reset versionfile
