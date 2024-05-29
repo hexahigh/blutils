@@ -45,8 +45,8 @@ var benchCmd = &cobra.Command{
 		go func() {
 			if *benchParams.Timeout > 0 {
 				time.Sleep(time.Duration(*benchParams.Timeout) * time.Second)
+				cancel()
 			}
-			cancel()
 		}()
 
 		for i := 0; i < *benchParams.CpuWorkers; i++ {
