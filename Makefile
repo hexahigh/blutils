@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+.PHONY: release release_arm64 clean
+
 release:
 	go build -ldflags="-w -s" -o blutils
 
