@@ -22,7 +22,7 @@ var benchParams BenchParams
 func init() {
 	rootCmd.AddCommand(benchCmd)
 
-	benchParams.CpuWorkers = benchCmd.Flags().IntP("cpu-workers", "c", 0, "Number of CPU workers")
+	benchParams.CpuWorkers = benchCmd.Flags().IntP("cpu", "c", 0, "Number of CPU workers")
 	benchParams.Timeout = benchCmd.Flags().IntP("timeout", "t", 10, "Maximum time in seconds")
 
 	benchCmd.ParseFlags(os.Args[1:])
