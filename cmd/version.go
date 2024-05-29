@@ -15,6 +15,6 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version number of blutils",
 	Long:  `Print the version number of blutils`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Version: " + versionParser("VERSION"))
+		fmt.Println(versionFile)
 	},
 }
