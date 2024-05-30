@@ -5,13 +5,11 @@
 release:
 	cp cmd/version cmd/version.bak
 
-	echo "\nCOMMIT=$(shell git rev-parse --short=7 HEAD)" >> cmd/version;
-	echo "\nUNIX_TIMESTAMP=$(shell date +%s)" >> cmd/version;
+	echo "COMMIT=$(shell git rev-parse --short=7 HEAD)" >> cmd/version;
+	echo "UNIX_TIMESTAMP=$(shell date +%s)" >> cmd/version;
 
     # Remove empty lines from the version file
 	sed -i '/^$$/d' cmd/version
-
-	cat cmd/version | sort | uniq > cmd/version
 
 	go build -ldflags="-w -s" -o blutils
 
