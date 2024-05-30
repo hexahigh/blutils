@@ -5,8 +5,6 @@ import (
 	"log"
 	"math/big"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/spf13/cobra"
 )
@@ -35,75 +33,46 @@ var bitflipCmd = &cobra.Command{
 	Long:  `Simulates a bitflip`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-
-		var filename string
-		var fileContent []byte
-
-		var err error
-
-		saveFile := func() error {
-			// Write back to file
-			return os.WriteFile(filename, fileContent, 0644)
+		filename := args[0]
+		fileContent, err := os.ReadFile(filename)
+		if err != nil {
+			log.Fatalf("Failed to read file: %v", err)
 		}
 
-		mainFunc := func() {
-			filename = args[0]
-			fileContent, err = os.ReadFile(filename)
+		maxPos := big.NewInt(int64(len(fileContent)))
+
+		verbosePrintln(3, "maxPos:", maxPos)
+
+		bitsToFlip := *bitflipParams.BitsToFlip
+		for i := 0; i < bitsToFlip; i++ {
+			// Choose a random position
+			pos, err := rand.Int(rand.Reader, maxPos)
 			if err != nil {
-				log.Fatalf("Failed to read file: %v", err)
+				log.Fatalf("Failed to generate random number: %v", err)
 			}
 
-			maxPos := big.NewInt(int64(len(fileContent)))
-
-			verbosePrintln(3, "maxPos:", maxPos)
-
-			bitsToFlip := *bitflipParams.BitsToFlip
-			for i := 0; i < bitsToFlip; i++ {
-				// Choose a random position
-				pos, err := rand.Int(rand.Reader, maxPos)
-				if err != nil {
-					log.Fatalf("Failed to generate random number: %v", err)
-				}
-
-				if *bitflipParams.MinOffset != 0 && pos.Int64() < int64(*bitflipParams.MinOffset) {
-					i--
-					continue
-				}
-
-				// Perform bit flip
-				fileContent[pos.Int64()] ^= 1
-
-				if *bitflipParams.ChunkSize > 1 && pos.Int64()+int64(*bitflipParams.ChunkSize) < maxPos.Int64() {
-					for j := 0; j < *bitflipParams.ChunkSize; j++ {
-						fileContent[pos.Int64()+int64(j)] ^= 1
-					}
-				}
-
-				verbosePrintln(3, "Flipped at offset", pos.Int64())
+			if *bitflipParams.MinOffset != 0 && pos.Int64() < int64(*bitflipParams.MinOffset) {
+				i--
+				continue
 			}
 
-			err = saveFile()
-			if err != nil {
-				verbosePrintln(0, "Failed to save file:", err)
+			// Perform bit flip
+			fileContent[pos.Int64()] ^= 1
+
+			if *bitflipParams.ChunkSize > 1 && pos.Int64()+int64(*bitflipParams.ChunkSize) < maxPos.Int64() {
+				for j := 0; j < *bitflipParams.ChunkSize; j++ {
+					fileContent[pos.Int64()+int64(j)] ^= 1
+				}
 			}
 
-			verbosePrintln(2, bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
-
-			os.Exit(0)
+			verbosePrintln(3, "Flipped at offset", pos.Int64())
 		}
 
-		go mainFunc()
+		err = os.WriteFile(filename, fileContent, 0644)
+		if err != nil {
+			verbosePrintln(0, "Failed to save file:", err)
+		}
 
-		verbosePrintln(2, "Running. Press CTRL-C to exit.")
-		sc := make(chan os.Signal, 1)
-		signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-		<-sc
-
-		verbosePrintln(2, "Saving file before exiting...")
-
-		_ = saveFile()
-
-		// Run os.Exit just in case
-		os.Exit(0)
+		verbosePrintln(2, bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
 	},
 }
