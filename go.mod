@@ -3,7 +3,7 @@ module github.com/hexahigh/blutils
 go 1.22.2
 
 require (
-	github.com/hexahigh/go-lib v1.2.0
+	github.com/hexahigh/go-lib v1.2.3
 	github.com/spf13/cobra v1.8.0
 	gopkg.in/yaml.v3 v3.0.1
 )

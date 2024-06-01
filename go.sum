@@ -3,6 +3,12 @@ github.com/cpuguy83/go-md2man/v2 v2.0.4 h1:wfIWP927BUkWJb2NmU/kNDYIBTh/ziUX91+lV
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/hexahigh/go-lib v1.2.0 h1:sN0PlCv9nYYDW8Cbhhsljiz4XLzTzdlObvwBjXswN/I=
 github.com/hexahigh/go-lib v1.2.0/go.mod h1:obXI9UpXHb8zk6wAFuZSxdpqtFjjxK7HNOF0AUPAudw=
+github.com/hexahigh/go-lib v1.2.1 h1:rxwXzyVgPlQnYolF9vyq2VNsjfTQULbNUtbKuwRAdsY=
+github.com/hexahigh/go-lib v1.2.1/go.mod h1:obXI9UpXHb8zk6wAFuZSxdpqtFjjxK7HNOF0AUPAudw=
+github.com/hexahigh/go-lib v1.2.2 h1:7yqNIjkSlbZtnyB5Zt42X0//fxKHOTO69oB3SyzaPwU=
+github.com/hexahigh/go-lib v1.2.2/go.mod h1:obXI9UpXHb8zk6wAFuZSxdpqtFjjxK7HNOF0AUPAudw=
+github.com/hexahigh/go-lib v1.2.3 h1:kgkV4gQiKFBir7wVF03DmuSG5VAWs73S9qwuT9mgPOU=
+github.com/hexahigh/go-lib v1.2.3/go.mod h1:obXI9UpXHb8zk6wAFuZSxdpqtFjjxK7HNOF0AUPAudw=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/russross/blackfriday/v2 v2.1.0 h1:JIOH55/0cWyOuilr9/qlrm0BSXldqnqwMsf35Ld67mk=
