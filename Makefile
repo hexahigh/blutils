@@ -3,7 +3,18 @@
 .PHONY: release release_arm64 clean
 
 release:
+	cp cmd/version cmd/version.bak
+
+	echo "COMMIT=$(shell git rev-parse --short=7 HEAD)" >> cmd/version;
+	echo "UNIX_TIMESTAMP=$(shell date +%s)" >> cmd/version;
+
+    # Remove empty lines from the version file
+	sed -i '/^$$/d' cmd/version
+
 	go build -ldflags="-w -s" -o blutils
+
+    # Reset versionfile
+	mv cmd/version.bak cmd/version
 
 deb:
 	mkdir -p debian/blutils
@@ -21,6 +32,7 @@ clean:
 	rm -f ./debian/files
 
     # Clean general files
+	rm -rf ./build
 	rm -f ./blutils
 
 #* 	ARM64
