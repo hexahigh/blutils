@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +17,8 @@ type BitflipParams struct {
 	Percentage *int
 	MinOffset  *int
 	ChunkSize  *int
+	NoProgress *bool
+	Extreme    *bool
 }
 
 var bitflipParams BitflipParams
@@ -27,6 +30,8 @@ func init() {
 	bitflipParams.Percentage = bitflipCmd.Flags().IntP("percentage", "p", 0, "Percentage of bits to flip (Will be ignored if 0 or if --bits is set)")
 	bitflipParams.MinOffset = bitflipCmd.Flags().IntP("min-offset", "m", 0, "Minimum offset")
 	bitflipParams.ChunkSize = bitflipCmd.Flags().IntP("chunk", "c", 1, "If >1, flips bits in chunks of this size")
+	bitflipParams.NoProgress = bitflipCmd.Flags().BoolP("no-progress", "n", false, "Disable progress bar")
+	bitflipParams.Extreme = bitflipCmd.Flags().BoolP("extreme", "e", false, "Flips to a random byte instead")
 }
 
 var bitflipCmd = &cobra.Command{
@@ -50,6 +55,12 @@ var bitflipCmd = &cobra.Command{
 			*bitflipParams.BitsToFlip = int(bitsToFlip)
 		}
 
+		var pb *progressbar.ProgressBar
+
+		if !*bitflipParams.NoProgress {
+			pb = progressbar.Default(int64(*bitflipParams.BitsToFlip))
+		}
+
 		bitsToFlip := *bitflipParams.BitsToFlip
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -68,7 +79,7 @@ var bitflipCmd = &cobra.Command{
 			default:
 				pos, err := rand.Int(rand.Reader, maxPos)
 				if err != nil {
-					log.Fatalf("Failed to generate random number: %v", err)
+					verbosePrintln(0, "Failed to generate random number: %v", err)
 				}
 
 				if *bitflipParams.MinOffset != 0 && pos.Int64() < int64(*bitflipParams.MinOffset) {
@@ -76,15 +87,25 @@ var bitflipCmd = &cobra.Command{
 					continue
 				}
 
-				// Perform bit flip
-				fileContent[pos.Int64()] ^= 1
+				if *bitflipParams.Extreme {
+					randomByte := make([]byte, 1)
+					_, err = rand.Read(randomByte)
+					if err != nil {
+						verbosePrintln(0, "Failed to generate random byte: %v", err)
+					}
+					fileContent[pos.Int64()] = randomByte[0]
+				} else {
+					// Perform bit flip
+					fileContent[pos.Int64()] ^= 1
 
-				if *bitflipParams.ChunkSize > 1 && pos.Int64()+int64(*bitflipParams.ChunkSize) < maxPos.Int64() {
-					for j := 0; j < *bitflipParams.ChunkSize; j++ {
-						fileContent[pos.Int64()+int64(j)] ^= 1
+					if *bitflipParams.ChunkSize > 1 && pos.Int64()+int64(*bitflipParams.ChunkSize) < maxPos.Int64() {
+						for j := 0; j < *bitflipParams.ChunkSize; j++ {
+							fileContent[pos.Int64()+int64(j)] ^= 1
+						}
 					}
 				}
 
+				pb.Add(1)
 				verbosePrintln(3, "Flipped at offset", pos.Int64())
 			}
 		}
