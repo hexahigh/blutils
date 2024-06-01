@@ -22,7 +22,7 @@ func init() {
 	rootCmd.AddCommand(bitflipCmd)
 
 	bitflipParams.BitsToFlip = bitflipCmd.Flags().IntP("bits", "b", 0, "Number of bits to flip")
-	bitflipParams.Percentage = bitflipCmd.Flags().IntP("percentage", "p", 0, "Percentage of bits to flip (Will be ignored if set to 0 or --bits is set)")
+	bitflipParams.Percentage = bitflipCmd.Flags().IntP("percentage", "p", 0, "Percentage of bits to flip (Will be ignored if 0 or if --bits is set)")
 	bitflipParams.MinOffset = bitflipCmd.Flags().IntP("min-offset", "m", 0, "Minimum offset")
 	bitflipParams.ChunkSize = bitflipCmd.Flags().IntP("chunk", "c", 1, "If >1, flips bits in chunks of this size")
 }
@@ -42,6 +42,11 @@ var bitflipCmd = &cobra.Command{
 		maxPos := big.NewInt(int64(len(fileContent)))
 
 		verbosePrintln(3, "maxPos:", maxPos)
+
+		if *bitflipParams.Percentage > 0 && *bitflipParams.BitsToFlip == 0 {
+			bitsToFlip := maxPos.Int64() * int64(*bitflipParams.Percentage) / 100
+			*bitflipParams.BitsToFlip = int(bitsToFlip)
+		}
 
 		bitsToFlip := *bitflipParams.BitsToFlip
 		for i := 0; i < bitsToFlip; i++ {
