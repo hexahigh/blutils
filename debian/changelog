@@ -1,3 +1,10 @@
+blutils (1.0.0) UNRELEASED; urgency=medium
+
+  * Added 'whatis' utility
+  * Added 'bitflip' utility
+
+ -- Boofdev <hexahigh0@gmail.com>  Sat, 01 Jun 2024 14:17:31 +0200
+
 blutils (0.1.2) UNRELEASED; urgency=medium
 
   * update benchmark
