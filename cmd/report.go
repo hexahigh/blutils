@@ -1,3 +1,5 @@
+//go:build !no_report
+
 package cmd
 
 import (

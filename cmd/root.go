@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	color "github.com/hexahigh/go-lib/ansicolor"
 	"github.com/spf13/cobra"
 )
 
@@ -22,8 +21,6 @@ var rootCmd = &cobra.Command{
 var rootParams RootParams
 var logger *log.Logger
 
-var verbosityMap = map[int]string{0: "ERROR", 1: "WARN", 2: "INFO", 3: "DEBUG"}
-
 type RootParams struct {
 	Verbosity *int
 	NoColor   *bool
@@ -38,22 +35,8 @@ func init() {
 
 	logger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
-	if !*rootParams.NoColor {
-		red := color.Red
-		yellow := color.Yellow
-		green := color.Green
-		blue := color.Purple
+	initColor()
 
-		if color.SupportsTrueColor() || *rootParams.TrueColor {
-			verbosePrintln(3, "Terminal supports full color")
-			red = color.Red24bit
-			yellow = color.Yellow24bit
-			green = color.Green24bit
-			blue = color.Purple24bit
-		}
-
-		verbosityMap = map[int]string{0: red + "ERROR" + color.Reset, 1: yellow + "WARN" + color.Reset, 2: green + "INFO" + color.Reset, 3: blue + "DEBUG" + color.Reset}
-	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

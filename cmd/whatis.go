@@ -1,3 +1,5 @@
+//go:build !no_whatis
+
 package cmd
 
 import (
