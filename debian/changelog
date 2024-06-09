@@ -1,3 +1,9 @@
+blutils (1.1.0) UNRELEASED; urgency=medium
+
+  * Added autoupdater
+
+ -- Boofdev <hexahigh0@gmail.com>  Sun, 09 Jun 2024 12:03:40 +0200
+
 blutils (1.0.1) UNRELEASED; urgency=medium
 
   * Update version
