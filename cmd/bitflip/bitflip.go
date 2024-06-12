@@ -1,6 +1,6 @@
 //go:build !no_bitflip
 
-package cmd
+package bitflip
 
 import (
 	"crypto/rand"
@@ -12,6 +12,8 @@ import (
 
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
+
+	root "github.com/hexahigh/blutils/cmd"
 )
 
 type BitflipParams struct {
@@ -26,7 +28,7 @@ type BitflipParams struct {
 var bitflipParams BitflipParams
 
 func init() {
-	rootCmd.AddCommand(bitflipCmd)
+	root.RootCmd.AddCommand(bitflipCmd)
 
 	bitflipParams.BitsToFlip = bitflipCmd.Flags().IntP("bits", "b", 0, "Number of bits to flip")
 	bitflipParams.Percentage = bitflipCmd.Flags().IntP("percentage", "p", 0, "Percentage of bits to flip (Will be ignored if 0 or if --bits is set)")
@@ -50,7 +52,7 @@ var bitflipCmd = &cobra.Command{
 
 		maxPos := big.NewInt(int64(len(fileContent)))
 
-		verbosePrintln(3, "maxPos:", maxPos)
+		root.VerbosePrintln(3, "maxPos:", maxPos)
 
 		if *bitflipParams.Percentage > 0 && *bitflipParams.BitsToFlip == 0 {
 			bitsToFlip := maxPos.Int64() * int64(*bitflipParams.Percentage) / 100
@@ -70,18 +72,18 @@ var bitflipCmd = &cobra.Command{
 		for i := 0; i < bitsToFlip; i++ {
 			select {
 			case <-sigChan:
-				verbosePrintln(2, "Interrupt received, saving file...")
+				root.VerbosePrintln(2, "Interrupt received, saving file...")
 				err = os.WriteFile(filename, fileContent, 0644)
 				if err != nil {
-					verbosePrintln(0, "Failed to save file:", err)
+					root.VerbosePrintln(0, "Failed to save file:", err)
 				} else {
-					verbosePrintln(2, "File saved successfully.")
+					root.VerbosePrintln(2, "File saved successfully.")
 				}
 				os.Exit(0)
 			default:
 				pos, err := rand.Int(rand.Reader, maxPos)
 				if err != nil {
-					verbosePrintln(0, "Failed to generate random number: %v", err)
+					root.VerbosePrintln(0, "Failed to generate random number: %v", err)
 				}
 
 				if *bitflipParams.MinOffset != 0 && pos.Int64() < int64(*bitflipParams.MinOffset) {
@@ -93,7 +95,7 @@ var bitflipCmd = &cobra.Command{
 					randomByte := make([]byte, 1)
 					_, err = rand.Read(randomByte)
 					if err != nil {
-						verbosePrintln(0, "Failed to generate random byte: %v", err)
+						root.VerbosePrintln(0, "Failed to generate random byte: %v", err)
 					}
 					fileContent[pos.Int64()] = randomByte[0]
 				} else {
@@ -108,16 +110,16 @@ var bitflipCmd = &cobra.Command{
 				}
 
 				pb.Add(1)
-				verbosePrintln(3, "Flipped at offset", pos.Int64())
+				root.VerbosePrintln(3, "Flipped at offset", pos.Int64())
 			}
 		}
 
 		// Save file after all bits have been flipped
 		err = os.WriteFile(filename, fileContent, 0644)
 		if err != nil {
-			verbosePrintln(0, "Failed to save file:", err)
+			root.VerbosePrintln(0, "Failed to save file:", err)
 		}
 
-		verbosePrintln(2, bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
+		root.VerbosePrintln(2, bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
 	},
 }

@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
 	Use:   "blutils",
 	Short: "Utility program",
 	Long:  `Utility program`,
@@ -18,20 +18,21 @@ var rootCmd = &cobra.Command{
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-var rootParams RootParams
+var rootParams Params
+var RootParams = rootParams
 var logger *log.Logger
 
-type RootParams struct {
+type Params struct {
 	Verbosity *int
 	NoColor   *bool
 	TrueColor *bool
 }
 
 func init() {
-	rootParams.Verbosity = rootCmd.PersistentFlags().IntP("verbosity", "v", 2, "Verbosity level (0-3)")
-	rootParams.NoColor = rootCmd.PersistentFlags().Bool("no-color", false, "Disable color output in log")
-	rootParams.TrueColor = rootCmd.PersistentFlags().Bool("true-color", false, "Force true color output in log")
-	rootCmd.ParseFlags(os.Args[1:])
+	rootParams.Verbosity = RootCmd.PersistentFlags().IntP("verbosity", "v", 2, "Verbosity level (0-3)")
+	rootParams.NoColor = RootCmd.PersistentFlags().Bool("no-color", false, "Disable color output in log")
+	rootParams.TrueColor = RootCmd.PersistentFlags().Bool("true-color", false, "Force true color output in log")
+	RootCmd.ParseFlags(os.Args[1:])
 
 	logger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
@@ -40,9 +41,9 @@ func init() {
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// This is called by main.main(). It only needs to happen once to the RootCmd.
 func Execute() {
-	err := rootCmd.Execute()
+	err := RootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}

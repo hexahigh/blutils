@@ -1,6 +1,6 @@
 //go:build !no_bench
 
-package cmd
+package bench
 
 import (
 	"context"
@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
+	root "github.com/hexahigh/blutils/cmd"
 )
 
 type BenchParams struct {
@@ -22,7 +24,7 @@ type BenchParams struct {
 var benchParams BenchParams
 
 func init() {
-	rootCmd.AddCommand(benchCmd)
+	root.RootCmd.AddCommand(benchCmd)
 
 	benchParams.CpuWorkers = benchCmd.Flags().IntP("cpu", "c", 0, "Number of CPU workers")
 	benchParams.Timeout = benchCmd.Flags().IntP("timeout", "t", 10, "Maximum time in seconds")
@@ -45,7 +47,7 @@ var benchCmd = &cobra.Command{
 		done := make(chan bool)
 
 		go func() {
-			verbosePrintln(3, "Starting timeout")
+			root.VerbosePrintln(3, "Starting timeout")
 			if *benchParams.Timeout > 0 {
 				time.Sleep(time.Duration(*benchParams.Timeout) * time.Second)
 				cancel()
