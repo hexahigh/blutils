@@ -103,7 +103,7 @@ var reportCmd = &cobra.Command{
 		}
 
 		if *reportParams.Stdout || *reportParams.OutFile == "-" {
-			*root.RootParams.Verbosity = -1
+			*root.Params.Verbosity = -1
 		}
 
 		var fileType string

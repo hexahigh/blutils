@@ -18,20 +18,19 @@ var RootCmd = &cobra.Command{
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-var rootParams Params
-var RootParams = rootParams
+var Params params
 var logger *log.Logger
 
-type Params struct {
+type params struct {
 	Verbosity *int
 	NoColor   *bool
 	TrueColor *bool
 }
 
 func init() {
-	rootParams.Verbosity = RootCmd.PersistentFlags().IntP("verbosity", "v", 2, "Verbosity level (0-3)")
-	rootParams.NoColor = RootCmd.PersistentFlags().Bool("no-color", false, "Disable color output in log")
-	rootParams.TrueColor = RootCmd.PersistentFlags().Bool("true-color", false, "Force true color output in log")
+	Params.Verbosity = RootCmd.PersistentFlags().IntP("verbosity", "v", 2, "Verbosity level (0-3)")
+	Params.NoColor = RootCmd.PersistentFlags().Bool("no-color", false, "Disable color output in log")
+	Params.TrueColor = RootCmd.PersistentFlags().Bool("true-color", false, "Force true color output in log")
 	RootCmd.ParseFlags(os.Args[1:])
 
 	logger = log.New(os.Stdout, "", log.Ldate|log.Ltime)

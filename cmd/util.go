@@ -14,13 +14,13 @@ var versionFile string
 var verbosityMap = map[int]string{0: "ERROR", 1: "WARN", 2: "INFO", 3: "DEBUG"}
 
 func initColor() {
-	if !*rootParams.NoColor {
+	if !*Params.NoColor {
 		red := color.Red
 		yellow := color.Yellow
 		green := color.Green
 		blue := color.Purple
 
-		if color.SupportsTrueColor() || *rootParams.TrueColor {
+		if color.SupportsTrueColor() || *Params.TrueColor {
 			VerbosePrintln(3, "Terminal supports full color")
 			red = color.Red24bit
 			yellow = color.Yellow24bit
@@ -33,14 +33,14 @@ func initColor() {
 }
 
 func VerbosePrintln(minLevel int, msg ...any) {
-	if *rootParams.Verbosity >= minLevel {
+	if *Params.Verbosity >= minLevel {
 		msg = append([]any{"[" + verbosityMap[minLevel] + "]"}, msg...)
 		logger.Println(msg...)
 	}
 }
 
 func VerbosePrintf(minLevel int, format string, msg ...any) {
-	if *rootParams.Verbosity >= minLevel {
+	if *Params.Verbosity >= minLevel {
 		msg = append([]any{"[" + verbosityMap[minLevel] + "]"}, msg...)
 		logger.Printf(format, msg...)
 	}
@@ -48,14 +48,14 @@ func VerbosePrintf(minLevel int, format string, msg ...any) {
 
 // Prints your message without any log level stuff
 func VerbosePrintlnC(minLevel int, msg ...any) {
-	if *rootParams.Verbosity >= minLevel {
+	if *Params.Verbosity >= minLevel {
 		logger.Println(msg...)
 	}
 }
 
 // Uses io.Writer to print your message
 func VerbosePrintlnW(minLevel int) io.Writer {
-	if *rootParams.Verbosity >= minLevel {
+	if *Params.Verbosity >= minLevel {
 		return logger.Writer()
 	}
 
