@@ -48,6 +48,7 @@ func (v *VerboseLogger) InitColor() {
 	}
 }
 
+// If verbosityLevel is >= minLevel, the message will be printed. Appends the level to the message with optional coloring. All other arguments are handled in the manner of fmt.Println
 func (v *VerboseLogger) Println(minLevel int, msg ...any) {
 	if v.verbosityLevel >= minLevel {
 		msg = append([]any{"[" + v.verbosityMap[minLevel] + "]"}, msg...)
@@ -55,6 +56,7 @@ func (v *VerboseLogger) Println(minLevel int, msg ...any) {
 	}
 }
 
+// If verbosityLevel is >= minLevel, the message will be printed. Appends the level to the message with optional coloring. All other arguments are handled in the manner of fmt.Printf
 func (v *VerboseLogger) Printf(minLevel int, format string, msg ...any) {
 	if v.verbosityLevel >= minLevel {
 		msg = append([]any{"[" + v.verbosityMap[minLevel] + "]"}, msg...)
@@ -62,6 +64,7 @@ func (v *VerboseLogger) Printf(minLevel int, format string, msg ...any) {
 	}
 }
 
+// If verbosityLevel is >= minLevel, the message will be printed. All other arguments are handled in the manner of fmt.Println
 func (v *VerboseLogger) PrintlnC(minLevel int, msg ...any) {
 	if v.verbosityLevel >= minLevel {
 		v.Println(minLevel, msg...)
