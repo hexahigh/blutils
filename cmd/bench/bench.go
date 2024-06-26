@@ -1,10 +1,7 @@
-//go:build !no_bench
-
 package bench
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -37,6 +34,7 @@ var benchCmd = &cobra.Command{
 	Short: "Simple benchmarking tool",
 	Long:  `Simple benchmarking tool`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := root.Logger
 		startTime := time.Now()
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -47,7 +45,7 @@ var benchCmd = &cobra.Command{
 		done := make(chan bool)
 
 		go func() {
-			root.VerbosePrintln(3, "Starting timeout")
+			logger.Println(3, "Starting timeout")
 			if *benchParams.Timeout > 0 {
 				time.Sleep(time.Duration(*benchParams.Timeout) * time.Second)
 				cancel()
@@ -55,7 +53,7 @@ var benchCmd = &cobra.Command{
 		}()
 
 		if *benchParams.CpuWorkers > 0 {
-			fmt.Printf("Starting %d CPU workers\n", *benchParams.CpuWorkers)
+			logger.Printf(2, "Starting %d CPU workers\n", *benchParams.CpuWorkers)
 		}
 
 		for i := 0; i < *benchParams.CpuWorkers; i++ {
@@ -98,8 +96,8 @@ var benchCmd = &cobra.Command{
 			totalOps += ops
 		}
 
-		fmt.Printf("Ran for %.2f seconds\n", duration)
-		fmt.Printf("Total operations: %d\n", totalOps)
-		fmt.Printf("Operations per second: %.2f\n", float64(totalOps)/float64(duration))
+		logger.Printf(2, "Ran for %.2f seconds\n", duration)
+		logger.Printf(2, "Total operations: %d\n", totalOps)
+		logger.Printf(2, "Operations per second: %.2f\n", float64(totalOps)/float64(duration))
 	},
 }

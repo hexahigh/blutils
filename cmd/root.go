@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/hexahigh/blutils/lib/verbprint"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +20,8 @@ var RootCmd = &cobra.Command{
 }
 
 var Params params
-var logger *log.Logger
+var logLogger *log.Logger
+var Logger *verbprint.VerboseLogger
 
 type params struct {
 	Verbosity *int
@@ -33,9 +35,18 @@ func init() {
 	Params.TrueColor = RootCmd.PersistentFlags().Bool("true-color", false, "Force true color output in log")
 	RootCmd.ParseFlags(os.Args[1:])
 
-	logger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
-	initColor()
+	colorNum := 0
+
+	if *Params.NoColor {
+		colorNum = -1
+	} else if *Params.TrueColor {
+		colorNum = 2
+	}
+
+	Logger = verbprint.New(*Params.Verbosity, logLogger, colorNum)
+	Logger.InitColor()
 
 }
 

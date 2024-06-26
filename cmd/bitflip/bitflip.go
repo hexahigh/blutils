@@ -1,5 +1,3 @@
-//go:build !no_bitflip
-
 package bitflip
 
 import (
@@ -44,6 +42,7 @@ var bitflipCmd = &cobra.Command{
 	Long:  `Simulates a bitflip`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := root.Logger
 		filename := args[0]
 		fileContent, err := os.ReadFile(filename)
 		if err != nil {
@@ -52,7 +51,7 @@ var bitflipCmd = &cobra.Command{
 
 		maxPos := big.NewInt(int64(len(fileContent)))
 
-		root.VerbosePrintln(3, "maxPos:", maxPos)
+		logger.Println(3, "maxPos:", maxPos)
 
 		if *bitflipParams.Percentage > 0 && *bitflipParams.BitsToFlip == 0 {
 			bitsToFlip := maxPos.Int64() * int64(*bitflipParams.Percentage) / 100
@@ -72,18 +71,18 @@ var bitflipCmd = &cobra.Command{
 		for i := 0; i < bitsToFlip; i++ {
 			select {
 			case <-sigChan:
-				root.VerbosePrintln(2, "Interrupt received, saving file...")
+				logger.Println(2, "Interrupt received, saving file...")
 				err = os.WriteFile(filename, fileContent, 0644)
 				if err != nil {
-					root.VerbosePrintln(0, "Failed to save file:", err)
+					logger.Println(0, "Failed to save file:", err)
 				} else {
-					root.VerbosePrintln(2, "File saved successfully.")
+					logger.Println(2, "File saved successfully.")
 				}
 				os.Exit(0)
 			default:
 				pos, err := rand.Int(rand.Reader, maxPos)
 				if err != nil {
-					root.VerbosePrintln(0, "Failed to generate random number: %v", err)
+					logger.Println(0, "Failed to generate random number: %v", err)
 				}
 
 				if *bitflipParams.MinOffset != 0 && pos.Int64() < int64(*bitflipParams.MinOffset) {
@@ -95,7 +94,7 @@ var bitflipCmd = &cobra.Command{
 					randomByte := make([]byte, 1)
 					_, err = rand.Read(randomByte)
 					if err != nil {
-						root.VerbosePrintln(0, "Failed to generate random byte: %v", err)
+						logger.Println(0, "Failed to generate random byte: %v", err)
 					}
 					fileContent[pos.Int64()] = randomByte[0]
 				} else {
@@ -110,16 +109,16 @@ var bitflipCmd = &cobra.Command{
 				}
 
 				pb.Add(1)
-				root.VerbosePrintln(3, "Flipped at offset", pos.Int64())
+				logger.Println(3, "Flipped at offset", pos.Int64())
 			}
 		}
 
 		// Save file after all bits have been flipped
 		err = os.WriteFile(filename, fileContent, 0644)
 		if err != nil {
-			root.VerbosePrintln(0, "Failed to save file:", err)
+			logger.Println(0, "Failed to save file:", err)
 		}
 
-		root.VerbosePrintln(2, bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
+		logger.Println(2, bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
 	},
 }
