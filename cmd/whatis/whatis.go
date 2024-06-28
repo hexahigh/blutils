@@ -1,6 +1,4 @@
-//go:build !no_whatis
-
-package cmd
+package whatis
 
 import (
 	"fmt"
@@ -9,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	root "github.com/hexahigh/blutils/cmd"
 	"github.com/hexahigh/go-lib/ctinfo"
 	"github.com/hexahigh/go-lib/sniff"
 	"github.com/spf13/cobra"
@@ -20,7 +19,7 @@ type WhatIsParams struct {
 var whatIsParams WhatIsParams
 
 func init() {
-	rootCmd.AddCommand(whatIsCmd)
+	root.RootCmd.AddCommand(whatIsCmd)
 
 }
 
@@ -42,14 +41,14 @@ var whatIsCmd = &cobra.Command{
 		for _, filePath := range args {
 			// Skip if file is a directory
 			if info, err := os.Stat(filePath); err == nil && info.IsDir() {
-				verbosePrintln(3, "Skipping directory:", filePath)
+				root.Logger.Println(3, "Skipping directory:", filePath)
 				continue
 			}
 
 			// Read the first 1024 bytes of the file
 			file, err := os.Open(filePath)
 			if err != nil {
-				verbosePrintln(0, "Failed to read file:", err)
+				root.Logger.Println(0, "Failed to read file:", err)
 			}
 
 			defer file.Close()
