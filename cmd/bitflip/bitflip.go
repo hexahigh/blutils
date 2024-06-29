@@ -39,8 +39,10 @@ func init() {
 var bitflipCmd = &cobra.Command{
 	Use:   "bitflip [filename]",
 	Short: "Simulates a bitflip",
-	Long:  `Simulates a bitflip`,
-	Args:  cobra.ExactArgs(1),
+	Long: `Simulates a bitflip.
+	If extreme mode is used it even works like a disk shredder! But i wouldn't recommend using it for that purpose
+	`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := root.Logger
 		filename := args[0]
