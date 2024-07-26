@@ -46,7 +46,6 @@ func init() {
 	}
 
 	Logger = verbprint.New(*Params.Verbosity, logLogger, colorNum)
-	Logger.InitColor()
 
 }
 

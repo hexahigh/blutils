@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/hexahigh/blutils/cmd"
 
+	_ "github.com/hexahigh/blutils/cmd/ascii85"
 	_ "github.com/hexahigh/blutils/cmd/bench"
 	_ "github.com/hexahigh/blutils/cmd/bitflip"
 	_ "github.com/hexahigh/blutils/cmd/report"

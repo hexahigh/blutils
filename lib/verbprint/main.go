@@ -21,14 +21,19 @@ func New(verbosityLevel int, logger *log.Logger, color int) *VerboseLogger {
 	if logger == nil {
 		panic("No logger provided to verbose logger")
 	}
-	return &VerboseLogger{
+	returnedLogger := &VerboseLogger{
 		verbosityLevel: verbosityLevel,
 		logger:         logger,
 		color:          color,
 		verbosityMap:   defaultVerbosityMap,
 	}
+
+	returnedLogger.InitColor()
+
+	return returnedLogger
 }
 
+// ! Deprecated, initColor is now called automatically
 func (v *VerboseLogger) InitColor() {
 	if v.color >= 0 && color.Supports256Colors() || v.color >= 1 {
 		red := color.Red
