@@ -1,3 +1,11 @@
+blutils (1.2.0) UNRELEASED; urgency=medium
+
+  * Updated bitflip description
+  * Fix logger.Printf
+  * Added ascii85
+
+ -- Boofdev <hexahigh0@gmail.com>  Fri, 26 Jul 2024 23:21:28 +0200
+
 blutils (1.1.2) UNRELEASED; urgency=medium
 
   * Chore: Upgrade from 1.2.3 to 1.3.0
