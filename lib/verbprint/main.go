@@ -21,14 +21,19 @@ func New(verbosityLevel int, logger *log.Logger, color int) *VerboseLogger {
 	if logger == nil {
 		panic("No logger provided to verbose logger")
 	}
-	return &VerboseLogger{
+	returnedLogger := &VerboseLogger{
 		verbosityLevel: verbosityLevel,
 		logger:         logger,
 		color:          color,
 		verbosityMap:   defaultVerbosityMap,
 	}
+
+	returnedLogger.InitColor()
+
+	return returnedLogger
 }
 
+// ! Deprecated, initColor is now called automatically
 func (v *VerboseLogger) InitColor() {
 	if v.color >= 0 && color.Supports256Colors() || v.color >= 1 {
 		red := color.Red
@@ -59,7 +64,7 @@ func (v *VerboseLogger) Println(minLevel int, msg ...any) {
 // If verbosityLevel is >= minLevel, the message will be printed. Appends the level to the message with optional coloring. All other arguments are handled in the manner of fmt.Printf
 func (v *VerboseLogger) Printf(minLevel int, format string, msg ...any) {
 	if v.verbosityLevel >= minLevel {
-		msg = append([]any{"[" + v.verbosityMap[minLevel] + "]"}, msg...)
+		format = "[" + v.verbosityMap[minLevel] + "] " + format
 		v.logger.Printf(format, msg...)
 	}
 }
