@@ -33,7 +33,7 @@ func init() {
 	reportParams.Yaml = reportCmd.Flags().BoolP("yaml", "y", false, "Output report in YAML format")
 	reportParams.Json = reportCmd.Flags().BoolP("json", "j", false, "Output report in JSON format")
 	reportParams.Stdout = reportCmd.Flags().BoolP("stdout", "s", false, "Output report to stdout")
-	reportParams.OutFile = reportCmd.Flags().StringP("out", "o", "", "Output report to file, use - for stdout")
+	reportParams.OutFile = reportCmd.Flags().StringP("out", "o", "report.yaml", "Output report to file, use - for stdout")
 
 	reportCmd.ParseFlags(os.Args[1:])
 }
