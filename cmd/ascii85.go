@@ -1,11 +1,10 @@
-package ascii85
+package cmd
 
 import (
 	"encoding/ascii85"
 	"io"
 	"os"
 
-	root "github.com/hexahigh/blutils/cmd"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +15,7 @@ var ascii85Params struct {
 }
 
 func init() {
-	root.RootCmd.AddCommand(ascii85Cmd)
+	rootCmd.AddCommand(ascii85Cmd)
 
 	ascii85Params.Decode = ascii85Cmd.Flags().BoolP("decode", "d", false, "Decode")
 	ascii85Params.InFile = ascii85Cmd.Flags().StringP("input", "i", "", "Input file")
@@ -30,27 +29,25 @@ var ascii85Cmd = &cobra.Command{
 ASCII85 is a text encoding that can be used to store binary data.
 It is more efficient than base64, base64 increases the size of the data by 33% while ASCII85 increases the size by 25%.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log := root.Logger
-
 		inputReader, err := getInputReader(*ascii85Params.InFile)
 		if err != nil {
-			log.Println(0, "Failed to open input:", err)
+			Log.Errorf("Failed to open input: %v", err)
 		}
 
 		outputWriter, err := getOutputWriter(*ascii85Params.OutFile)
 		if err != nil {
-			log.Println(0, "Failed to open output:", err)
+			Log.Errorf("Failed to open output: %v", err)
 		}
 
 		if *ascii85Params.Decode {
 			decoder := ascii85.NewDecoder(inputReader)
 			if _, err := io.Copy(outputWriter, decoder); err != nil {
-				log.Println(0, "Failed to decode:", err)
+				Log.Errorf("Failed to decode: %v", err)
 			}
 		} else {
 			encoder := ascii85.NewEncoder(outputWriter)
 			if _, err := io.Copy(encoder, inputReader); err != nil {
-				log.Println(0, "Failed to encode:", err)
+				Log.Errorf("Failed to encode: %v", err)
 			}
 		}
 

@@ -1,4 +1,4 @@
-package bitflip
+package cmd
 
 import (
 	"crypto/rand"
@@ -10,8 +10,6 @@ import (
 
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
-
-	root "github.com/hexahigh/blutils/cmd"
 )
 
 type BitflipParams struct {
@@ -26,7 +24,7 @@ type BitflipParams struct {
 var bitflipParams BitflipParams
 
 func init() {
-	root.RootCmd.AddCommand(bitflipCmd)
+	rootCmd.AddCommand(bitflipCmd)
 
 	bitflipParams.BitsToFlip = bitflipCmd.Flags().IntP("bits", "b", 0, "Number of bits to flip")
 	bitflipParams.Percentage = bitflipCmd.Flags().IntP("percentage", "p", 0, "Percentage of bits to flip (Will be ignored if 0 or if --bits is set)")
@@ -44,7 +42,6 @@ var bitflipCmd = &cobra.Command{
 	`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := root.Logger
 		filename := args[0]
 		fileContent, err := os.ReadFile(filename)
 		if err != nil {
@@ -53,7 +50,7 @@ var bitflipCmd = &cobra.Command{
 
 		maxPos := big.NewInt(int64(len(fileContent)))
 
-		logger.Println(3, "maxPos:", maxPos)
+		Log.Debugf("maxPos:", maxPos)
 
 		if *bitflipParams.Percentage > 0 && *bitflipParams.BitsToFlip == 0 {
 			bitsToFlip := maxPos.Int64() * int64(*bitflipParams.Percentage) / 100
@@ -73,18 +70,18 @@ var bitflipCmd = &cobra.Command{
 		for i := 0; i < bitsToFlip; i++ {
 			select {
 			case <-sigChan:
-				logger.Println(2, "Interrupt received, saving file...")
+				Log.Infoln("Interrupt received, saving file...")
 				err = os.WriteFile(filename, fileContent, 0644)
 				if err != nil {
-					logger.Println(0, "Failed to save file:", err)
+					Log.Errorln("Failed to save file:", err)
 				} else {
-					logger.Println(2, "File saved successfully.")
+					Log.Infoln("File saved successfully.")
 				}
 				os.Exit(0)
 			default:
 				pos, err := rand.Int(rand.Reader, maxPos)
 				if err != nil {
-					logger.Println(0, "Failed to generate random number: %v", err)
+					Log.Errorln("Failed to generate random number: %v", err)
 				}
 
 				if *bitflipParams.MinOffset != 0 && pos.Int64() < int64(*bitflipParams.MinOffset) {
@@ -96,7 +93,7 @@ var bitflipCmd = &cobra.Command{
 					randomByte := make([]byte, 1)
 					_, err = rand.Read(randomByte)
 					if err != nil {
-						logger.Println(0, "Failed to generate random byte: %v", err)
+						Log.Errorln("Failed to generate random byte: %v", err)
 					}
 					fileContent[pos.Int64()] = randomByte[0]
 				} else {
@@ -111,16 +108,16 @@ var bitflipCmd = &cobra.Command{
 				}
 
 				pb.Add(1)
-				logger.Println(3, "Flipped at offset", pos.Int64())
+				Log.Debugf("Flipped at offset", pos.Int64())
 			}
 		}
 
 		// Save file after all bits have been flipped
 		err = os.WriteFile(filename, fileContent, 0644)
 		if err != nil {
-			logger.Println(0, "Failed to save file:", err)
+			Log.Errorln("Failed to save file:", err)
 		}
 
-		logger.Println(2, bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
+		Log.Infoln(bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
 	},
 }

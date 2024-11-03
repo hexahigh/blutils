@@ -1,4 +1,4 @@
-package bench
+package cmd
 
 import (
 	"context"
@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
-	root "github.com/hexahigh/blutils/cmd"
 )
 
 type BenchParams struct {
@@ -21,7 +19,7 @@ type BenchParams struct {
 var benchParams BenchParams
 
 func init() {
-	root.RootCmd.AddCommand(benchCmd)
+	rootCmd.AddCommand(benchCmd)
 
 	benchParams.CpuWorkers = benchCmd.Flags().IntP("cpu", "c", 0, "Number of CPU workers")
 	benchParams.Timeout = benchCmd.Flags().IntP("timeout", "t", 10, "Maximum time in seconds")
@@ -34,7 +32,6 @@ var benchCmd = &cobra.Command{
 	Short: "Simple benchmarking tool",
 	Long:  `Simple benchmarking tool`,
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := root.Logger
 		startTime := time.Now()
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -45,7 +42,7 @@ var benchCmd = &cobra.Command{
 		done := make(chan bool)
 
 		go func() {
-			logger.Println(3, "Starting timeout")
+			Log.Infoln("Starting timer")
 			if *benchParams.Timeout > 0 {
 				time.Sleep(time.Duration(*benchParams.Timeout) * time.Second)
 				cancel()
@@ -53,7 +50,7 @@ var benchCmd = &cobra.Command{
 		}()
 
 		if *benchParams.CpuWorkers > 0 {
-			logger.Printf(2, "Starting %d CPU workers\n", *benchParams.CpuWorkers)
+			Log.Infof("Starting %d CPU workers\n", *benchParams.CpuWorkers)
 		}
 
 		for i := 0; i < *benchParams.CpuWorkers; i++ {
@@ -96,8 +93,8 @@ var benchCmd = &cobra.Command{
 			totalOps += ops
 		}
 
-		logger.Printf(2, "Ran for %.2f seconds\n", duration)
-		logger.Printf(2, "Total operations: %d\n", totalOps)
-		logger.Printf(2, "Operations per second: %.2f\n", float64(totalOps)/float64(duration))
+		Log.Infof("Ran for %.2f seconds\n", duration)
+		Log.Infof("Total operations: %d\n", totalOps)
+		Log.Infof("Operations per second: %.2f\n", float64(totalOps)/float64(duration))
 	},
 }

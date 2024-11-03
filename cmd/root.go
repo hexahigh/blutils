@@ -2,15 +2,14 @@ package cmd
 
 import (
 	_ "embed"
-	"log"
 	"os"
 
-	"github.com/hexahigh/blutils/lib/verbprint"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-// RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
 	Use:   "blutils",
 	Short: "Utility program",
 	Long:  `Utility program`,
@@ -19,40 +18,25 @@ var RootCmd = &cobra.Command{
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-var Params params
-var logLogger *log.Logger
-var Logger *verbprint.VerboseLogger
-
-type params struct {
-	Verbosity *int
-	NoColor   *bool
-	TrueColor *bool
+var Params struct {
+	Verbosity *int8
 }
 
+var Log *logrus.Logger
+
 func init() {
-	Params.Verbosity = RootCmd.PersistentFlags().IntP("verbosity", "v", 2, "Verbosity level (0-3)")
-	Params.NoColor = RootCmd.PersistentFlags().Bool("no-color", false, "Disable color output in log")
-	Params.TrueColor = RootCmd.PersistentFlags().Bool("true-color", false, "Force true color output in log")
-	RootCmd.ParseFlags(os.Args[1:])
+	Params.Verbosity = rootCmd.PersistentFlags().Int8P("verbosity", "v", 4, "verbosity level. 0=panic, 1=fatal, 2=error, 3=warn, 4=info, 5=debug, 6=trace")
+	rootCmd.ParseFlags(os.Args[1:])
 
-	logLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
-
-	colorNum := 0
-
-	if *Params.NoColor {
-		colorNum = -1
-	} else if *Params.TrueColor {
-		colorNum = 2
-	}
-
-	Logger = verbprint.New(*Params.Verbosity, logLogger, colorNum)
-
+	Log = logrus.New()
+	Log.SetLevel(logrus.Level(*Params.Verbosity))
+	Log.SetFormatter(&logrus.TextFormatter{})
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the RootCmd.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := RootCmd.Execute()
+	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}

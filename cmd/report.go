@@ -1,4 +1,4 @@
-package report
+package cmd
 
 import (
 	"bufio"
@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	root "github.com/hexahigh/blutils/cmd"
 	color "github.com/hexahigh/go-lib/ansicolor"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -28,7 +28,7 @@ type ReportParams struct {
 var reportParams ReportParams
 
 func init() {
-	root.RootCmd.AddCommand(reportCmd)
+	rootCmd.AddCommand(reportCmd)
 
 	reportParams.Yaml = reportCmd.Flags().BoolP("yaml", "y", false, "Output report in YAML format")
 	reportParams.Json = reportCmd.Flags().BoolP("json", "j", false, "Output report in JSON format")
@@ -93,15 +93,15 @@ var reportCmd = &cobra.Command{
 		}
 
 		printSuccess := func(msg string) {
-			root.Logger.PrintlnC(2, color.Green+"[OK]"+color.Reset, msg)
+			Log.Infoln(color.Green+"[OK]"+color.Reset, msg)
 		}
 
 		printFailure := func(msg string) {
-			root.Logger.PrintlnC(1, color.Red+"[FAIL]"+color.Reset, msg)
+			Log.Infoln(color.Red+"[FAIL]"+color.Reset, msg)
 		}
 
 		if *reportParams.Stdout || *reportParams.OutFile == "-" {
-			*root.Params.Verbosity = -1
+			Log.SetLevel(logrus.PanicLevel)
 		}
 
 		var fileType string
@@ -114,7 +114,7 @@ var reportCmd = &cobra.Command{
 		}
 
 		if *reportParams.Yaml && *reportParams.Json {
-			root.Logger.Println(0, "Cannot use both -Y and -J")
+			Log.Errorln("Cannot use both -Y and -J")
 			os.Exit(1)
 		}
 
@@ -122,15 +122,15 @@ var reportCmd = &cobra.Command{
 			*reportParams.Stdout = true
 		}
 
-		root.Logger.Println(3, "Filetype:", fileType)
-		root.Logger.Println(3, "Output file:", out_file)
+		Log.Debugln("Filetype:", fileType)
+		Log.Debugln("Output file:", out_file)
 
 		// Get CPU Info
-		root.Logger.Println(3, "Getting CPU Info...")
+		Log.Debugln("Getting CPU Info...")
 		cpuInfo, err := os.Open("/proc/cpuinfo")
 		if err != nil {
 			printFailure("cpuinfo")
-			root.Logger.Println(3, "Error opening /proc/cpuinfo:", err)
+			Log.Debugln("Error opening /proc/cpuinfo:", err)
 		} else {
 			defer cpuInfo.Close()
 
@@ -147,18 +147,18 @@ var reportCmd = &cobra.Command{
 			}
 			if err := scanner.Err(); err != nil {
 				printFailure("cpuinfo")
-				root.Logger.Println(3, "Error reading /proc/cpuinfo:", err)
+				Log.Debugln("Error reading /proc/cpuinfo:", err)
 				return
 			}
 			printSuccess("cpuinfo")
 		}
 
 		// Get OS Info
-		root.Logger.Println(3, "Getting OS Info...")
+		Log.Debugln("Getting OS Info...")
 		osInfo, err := os.Open("/etc/os-release")
 		if err != nil {
 			printFailure("os-release")
-			root.Logger.Println(3, "Error opening /etc/os-release:", err)
+			Log.Debugln("Error opening /etc/os-release:", err)
 		} else {
 			defer osInfo.Close()
 
@@ -176,18 +176,18 @@ var reportCmd = &cobra.Command{
 
 			if err := scanner.Err(); err != nil {
 				printFailure("os-release")
-				root.Logger.Println(3, "Error reading /etc/os-release:", err)
+				Log.Debugln("Error reading /etc/os-release:", err)
 				return
 			}
 			printSuccess("os-release")
 		}
 
 		// Get mem info
-		root.Logger.Println(3, "Getting Memory Info...")
+		Log.Debugln("Getting Memory Info...")
 		memInfo, err := os.Open("/proc/meminfo")
 		if err != nil {
 			printFailure("meminfo")
-			root.Logger.Println(3, "Error opening /proc/meminfo:", err)
+			Log.Debugln("Error opening /proc/meminfo:", err)
 		} else {
 			defer cpuInfo.Close()
 
@@ -205,14 +205,14 @@ var reportCmd = &cobra.Command{
 
 			if err := scanner.Err(); err != nil {
 				printFailure("meminfo")
-				root.Logger.Println(3, "Error reading /proc/meminfo:", err)
+				Log.Debugln("Error reading /proc/meminfo:", err)
 				return
 			}
 			printSuccess("meminfo")
 		}
 
 		// Get env
-		root.Logger.Println(3, "Getting Environment Variables...")
+		Log.Debugln("Getting Environment Variables...")
 		envMap := make(map[string]string)
 		for _, envVar := range os.Environ() {
 			parts := strings.SplitN(envVar, "=", 2)
@@ -225,11 +225,11 @@ var reportCmd = &cobra.Command{
 		printSuccess("env")
 
 		// Get swap info
-		root.Logger.Println(3, "Getting Swap Info...")
+		Log.Debugln("Getting Swap Info...")
 		swapInfo, err := os.Open("/proc/swaps")
 		if err != nil {
 			printFailure("swapinfo")
-			root.Logger.Println(3, "Error opening /proc/swaps:", err)
+			Log.Debugln("Error opening /proc/swaps:", err)
 		} else {
 			defer swapInfo.Close()
 
@@ -247,26 +247,26 @@ var reportCmd = &cobra.Command{
 
 			if err := scanner.Err(); err != nil {
 				printFailure("swapinfo")
-				root.Logger.Println(3, "Error reading /proc/swaps:", err)
+				Log.Debugln("Error reading /proc/swaps:", err)
 				return
 			}
 			printSuccess("swapinfo")
 		}
 
 		// Execute lsblk -J
-		root.Logger.Println(3, "Executing lsblk -J...")
+		Log.Debugln("Executing lsblk -J...")
 		command := exec.Command("lsblk", "-J")
 		out, err := executeCmd(command)
 		if err != nil {
 			printFailure("lsblk")
-			root.Logger.Println(3, "Error executing lsblk -J:", err)
+			Log.Debugln("Error executing lsblk -J:", err)
 		} else {
 
 			// Parse lsblk output
 			err = json.Unmarshal(out, &lsblkOutput)
 			if err != nil {
 				printFailure("lsblk")
-				root.Logger.Println(3, "Error parsing lsblk output:", err)
+				Log.Debugln("Error parsing lsblk output:", err)
 				return
 			}
 
@@ -274,12 +274,12 @@ var reportCmd = &cobra.Command{
 		}
 
 		// Lscpu
-		root.Logger.Println(3, "Executing lscpu...")
+		Log.Debugln("Executing lscpu...")
 		command = exec.Command("lscpu")
 		out, err = executeCmd(command)
 		if err != nil {
 			printFailure("lscpu")
-			root.Logger.Println(3, "Error executing lscpu", err)
+			Log.Debugln("Error executing lscpu", err)
 		} else {
 			defer cpuInfo.Close()
 
@@ -297,7 +297,7 @@ var reportCmd = &cobra.Command{
 
 			if err := scanner.Err(); err != nil {
 				printFailure("lscpu")
-				root.Logger.Println(3, "Error executing lscpu", err)
+				Log.Debugln("Error executing lscpu", err)
 				return
 			}
 
@@ -305,14 +305,14 @@ var reportCmd = &cobra.Command{
 		}
 
 		// Get installed packages
-		root.Logger.Println(3, "Getting installed packages...")
+		Log.Debugln("Getting installed packages...")
 		switch osMap["ID"] {
 		case "ubuntu", "debian":
 			command = exec.Command("dpkg", "--get-selections")
 			out, err = executeCmd(command)
 			if err != nil {
 				printFailure("pkg")
-				root.Logger.Println(3, "Error executing dpkg --get-selections:", err)
+				Log.Debugln("Error executing dpkg --get-selections:", err)
 				return
 			}
 			installedPackages = strings.Split(string(out), "\n")
@@ -328,13 +328,13 @@ var reportCmd = &cobra.Command{
 			out, err = executeCmd(command)
 			if err != nil {
 				printFailure("pkg")
-				root.Logger.Println(3, "Error executing rpm -qa:", err)
+				Log.Debugln("Error executing rpm -qa:", err)
 				return
 			}
 			installedPackages = strings.Split(string(out), "\n")
 		default:
 			printFailure("pkg")
-			root.Logger.Println(3, "Unsupported/Unknown OS:", osMap["ID"])
+			Log.Debugln("Unsupported/Unknown OS:", osMap["ID"])
 			return
 		}
 
@@ -346,7 +346,7 @@ var reportCmd = &cobra.Command{
 		out, err = executeCmd(command)
 		if err != nil {
 			printFailure("nproc")
-			root.Logger.Println(3, "Error executing nproc:", err)
+			Log.Debugln("Error executing nproc:", err)
 			return
 		} else {
 			printSuccess("nproc")
@@ -356,7 +356,7 @@ var reportCmd = &cobra.Command{
 		nprocInt, err := strconv.Atoi(nproc)
 		if err != nil {
 			printFailure("nproc")
-			root.Logger.Println(3, "Error converting nproc to integer:", err)
+			Log.Debugln("Error converting nproc to integer:", err)
 			return
 		} else {
 			printSuccess("nproc")
@@ -375,24 +375,24 @@ var reportCmd = &cobra.Command{
 		}
 
 		// Marshal the report to either JSON or YAML
-		root.Logger.Println(3, "Marshalling report...")
+		Log.Debugln("Marshalling report...")
 		var data []byte
 		switch fileType {
 		case "yaml":
 			data, err = yaml.Marshal(report)
 			if err != nil {
-				root.Logger.Println(0, "Error marshalling report to YAML:", err)
+				Log.Errorln("Error marshalling report to YAML:", err)
 				return
 			}
 			// Prepend the comment to the data
 			var comment string
-			comment += "# System report generated by Blutils v" + root.VersionParser("VERSION") + "\n"
+			comment += "# System report generated by Blutils v" + VersionParser("VERSION") + "\n"
 			comment += "# Report generated on " + time.Now().Format("2006-01-02 15:04:05") + "\n"
 			data = append([]byte(comment), data...)
 		case "json":
 			data, err = json.Marshal(report)
 			if err != nil {
-				root.Logger.Println(0, "Error marshalling report to JSON:", err)
+				Log.Errorln("Error marshalling report to JSON:", err)
 				return
 			}
 		}
@@ -404,13 +404,13 @@ var reportCmd = &cobra.Command{
 			// Write the data to the output file
 			err = os.WriteFile(*reportParams.OutFile, data, fs.ModePerm)
 			if err != nil {
-				root.Logger.Println(0, "Error writing report to file:", err)
+				Log.Errorln("Error writing report to file:", err)
 				return
 			}
 
-			root.Logger.Println(2, "System report completed.")
-			root.Logger.Println(2, "Report written to:", out_file)
-			root.Logger.Println(1, "The system report contains environment variables, installed packages and more! You may want to review the report if you are planning on sharing it.")
+			Log.Infoln("System report completed.")
+			Log.Infoln("Report written to:", out_file)
+			Log.Warnln("The system report contains environment variables, installed packages and more! You may want to review the report if you are planning on sharing it.")
 		}
 	},
 }

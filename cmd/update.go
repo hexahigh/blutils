@@ -1,4 +1,4 @@
-package update
+package cmd
 
 import (
 	"encoding/json"
@@ -14,8 +14,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
-
-	root "github.com/hexahigh/blutils/cmd"
 )
 
 type UpdateParams struct {
@@ -27,7 +25,7 @@ type UpdateParams struct {
 var updateParams UpdateParams
 
 func init() {
-	root.RootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(updateCmd)
 
 	updateParams.Repo = updateCmd.Flags().StringP("repo", "r", "hexahigh/blutils", "Repository to update from, must be hosted on github.com")
 	updateParams.Tag = updateCmd.Flags().StringP("tag", "t", "", "Force update to a specific tag")
@@ -44,17 +42,17 @@ var updateCmd = &cobra.Command{
 		// Check if Go is installed
 		_, err := exec.LookPath("go")
 		if err != nil {
-			root.Logger.Println(0, "Go is not installed")
+			Log.Errorln("Go is not installed")
 			return
 		}
 
 		if *updateParams.Tag == "" {
-			root.Logger.Println(2, "Getting latest tag from github...")
+			Log.Infoln("Getting latest tag from github...")
 
 			// Get list of tags from github
 			response, err := http.Get("https://api.github.com/repos/" + *updateParams.Repo + "/git/refs/tags")
 			if err != nil {
-				root.Logger.Println(0, "Error fetching tags from github:", err)
+				Log.Errorln("Error fetching tags from github:", err)
 				return
 			}
 			defer response.Body.Close()
@@ -67,7 +65,7 @@ var updateCmd = &cobra.Command{
 			var refs []string
 
 			if err := json.NewDecoder(response.Body).Decode(&tagReferences); err != nil {
-				root.Logger.Println(0, "Error decoding JSON response:", err)
+				Log.Errorln("Error decoding JSON response:", err)
 				return
 			}
 
@@ -77,65 +75,65 @@ var updateCmd = &cobra.Command{
 			// Sort tags
 			semver.Sort(refs)
 
-			root.Logger.Println(3, "Tags:", refs)
+			Log.Debugln("Tags:", refs)
 
 			// Get latest tag
 			tag = refs[len(refs)-1]
 		}
 
-		root.Logger.Println(2, "Using tag:", tag)
+		Log.Infoln("Using tag:", tag)
 
 		// Clean temp dir
-		root.Logger.Println(2, "Cleaning temp dir...")
+		Log.Infoln("Cleaning temp dir...")
 		if err := os.RemoveAll(*updateParams.TempDir); err != nil {
-			root.Logger.Println(0, "Error cleaning temp dir:", err)
+			Log.Errorln("Error cleaning temp dir:", err)
 			return
 		}
 
 		// Clone
-		root.Logger.Println(2, "Cloning repo...")
+		Log.Infoln("Cloning repo...")
 		git.PlainClone(*updateParams.TempDir, false, &git.CloneOptions{
 			URL:           "https://github.com/" + *updateParams.Repo,
-			Progress:      sideband.NewMuxer(sideband.Sideband64k, root.Logger.PrintW(3)),
+			Progress:      sideband.NewMuxer(sideband.Sideband64k, os.Stdout),
 			ReferenceName: plumbing.NewTagReferenceName(tag),
 			Depth:         1,
 		})
 
 		// Build
-		root.Logger.Println(2, "Building...")
+		Log.Infoln("Building...")
 		buildPath := filepath.Join(*updateParams.TempDir)
 		command := exec.Command("go", "build", "-ldflags", "-s -w", "-o", "blutils", ".")
 		command.Dir = buildPath
 		output, err := command.CombinedOutput()
 		if err != nil {
-			root.Logger.Println(0, "Error during build:", err)
-			root.Logger.Println(0, "Build output:", string(output))
+			Log.Errorln("Error during build:", err)
+			Log.Errorln("Build output:", string(output))
 			return
 		}
-		root.Logger.Println(2, "Build successful")
+		Log.Infoln("Build successful")
 
 		exePath, _ := os.Executable()
 		oldExePath := exePath + ".bak"
 
-		root.Logger.Println(2, "Moving old executable to:", oldExePath)
+		Log.Infoln("Moving old executable to:", oldExePath)
 		if err := os.Rename(exePath, oldExePath); err != nil {
-			root.Logger.Println(0, "Error moving old executable:", err)
+			Log.Errorln("Error moving old executable:", err)
 			return
 		}
 
-		root.Logger.Println(2, "Moving new executable to:", exePath)
+		Log.Infoln("Moving new executable to:", exePath)
 		if err := os.Rename(filepath.Join(buildPath, "blutils"), exePath); err != nil {
-			root.Logger.Println(0, "Error moving new executable:", err)
+			Log.Errorln("Error moving new executable:", err)
 			return
 		}
 
-		root.Logger.Println(2, "Cleaning up...")
+		Log.Infoln("Cleaning up...")
 		if err := os.RemoveAll(*updateParams.TempDir); err != nil {
-			root.Logger.Println(0, "Error removing temp dir:", err)
+			Log.Errorln("Error removing temp dir:", err)
 		}
 		if err := os.Remove(oldExePath); err != nil {
-			root.Logger.Println(0, "Error removing old executable:", err)
+			Log.Errorln("Error removing old executable:", err)
 		}
-		root.Logger.Println(2, "Update successful")
+		Log.Infoln("Update successful")
 	},
 }
