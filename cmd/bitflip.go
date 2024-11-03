@@ -50,7 +50,7 @@ var bitflipCmd = &cobra.Command{
 
 		maxPos := big.NewInt(int64(len(fileContent)))
 
-		log.Debugf("maxPos:", maxPos)
+		log.Debugln("maxPos:", maxPos)
 
 		if *bitflipParams.Percentage > 0 && *bitflipParams.BitsToFlip == 0 {
 			bitsToFlip := maxPos.Int64() * int64(*bitflipParams.Percentage) / 100
@@ -81,7 +81,7 @@ var bitflipCmd = &cobra.Command{
 			default:
 				pos, err := rand.Int(rand.Reader, maxPos)
 				if err != nil {
-					log.Errorln("Failed to generate random number: %v", err)
+					log.Errorf("Failed to generate random number: %v", err)
 				}
 
 				if *bitflipParams.MinOffset != 0 && pos.Int64() < int64(*bitflipParams.MinOffset) {
@@ -93,7 +93,7 @@ var bitflipCmd = &cobra.Command{
 					randomByte := make([]byte, 1)
 					_, err = rand.Read(randomByte)
 					if err != nil {
-						log.Errorln("Failed to generate random byte: %v", err)
+						log.Errorf("Failed to generate random byte: %v", err)
 					}
 					fileContent[pos.Int64()] = randomByte[0]
 				} else {
@@ -108,7 +108,7 @@ var bitflipCmd = &cobra.Command{
 				}
 
 				pb.Add(1)
-				log.Debugf("Flipped at offset", pos.Int64())
+				log.Debugf("Flipped at offset %d", pos.Int64())
 			}
 		}
 
