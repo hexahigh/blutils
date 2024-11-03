@@ -110,7 +110,6 @@ func getDefault(key string) any {
 } */
 
 func commandToConfigString(c cobra.Command) string {
-	log.Infoln("Command:", c.Name())
 	configString := c.Name()
 	for parent := c.Parent(); parent != nil; parent = parent.Parent() {
 		if parent.Name() != "blutils" {
