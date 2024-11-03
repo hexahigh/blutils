@@ -19,7 +19,7 @@ func init() {
 	benchCmd.Flags().IntP("cpu", "c", 0, "Number of CPU workers")
 	benchCmd.Flags().IntP("timeout", "t", 10, "Maximum time in seconds")
 
-	benchCmd.ParseFlags(os.Args[1:])
+	configBindFlags(*benchCmd)
 }
 
 var benchCmd = &cobra.Command{
@@ -27,7 +27,7 @@ var benchCmd = &cobra.Command{
 	Short: "Simple benchmarking tool",
 	Long:  `Simple benchmarking tool`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cn := cmd.Name()
+		cn := commandToConfigString(*cmd)
 		startTime := time.Now()
 
 		ctx, cancel := context.WithCancel(context.Background())

@@ -24,6 +24,8 @@ func init() {
 	updateCmd.Flags().StringP("repo", "r", "hexahigh/blutils", "Repository to update from, must be hosted on github.com")
 	updateCmd.Flags().StringP("tag", "t", "", "Force update to a specific tag")
 	updateCmd.Flags().StringP("temp", "T", filepath.Join(os.TempDir(), "blutils-build"), "Temporary directory")
+
+	configBindFlags(*updateCmd)
 }
 
 var updateCmd = &cobra.Command{
@@ -31,7 +33,7 @@ var updateCmd = &cobra.Command{
 	Short: "Update blutils",
 	Long:  `Update blutils`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cn := cmd.Name()
+		cn := commandToConfigString(*cmd)
 		var tag string
 
 		// Check if Go is installed

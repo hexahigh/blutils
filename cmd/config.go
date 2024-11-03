@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var configDefaults = map[string]map[string]any{
+var configDefaults = map[string]map[string]interface{}{
 	"blutils": {
 		"verbosity":              4,
 		"config-dir":             getDefaultConfigDir(),
@@ -23,6 +23,11 @@ var configDefaults = map[string]map[string]any{
 		"fullTimestamp":          false,
 		"disableTimestamp":       false,
 		"prettyPrint":            false,
+	},
+	"ascii85": {
+		"decode": false,
+		"input":  "",
+		"output": "",
 	},
 	"bitflip": {
 		"bits":        0,
@@ -41,6 +46,20 @@ var configDefaults = map[string]map[string]any{
 		"tag":  "",
 		"temp": filepath.Join(os.TempDir(), "blutils-build"),
 	},
+	"hello": {
+		"world": map[string]interface{}{
+			"foo": map[string]interface{}{
+				"bar": 42,
+				"baz": true,
+			},
+			"qux": map[string]interface{}{
+				"quux": "hello",
+			},
+		},
+		"corge": map[string]interface{}{
+			"grault": 24,
+		},
+	},
 }
 
 func configLoadDefaults() {
@@ -52,14 +71,8 @@ func configLoadDefaults() {
 }
 
 func configBindFlags(command cobra.Command) {
-	command.LocalFlags().VisitAll(func(flag *pflag.Flag) {
-		err := viper.BindPFlag(command.Name()+"."+flag.Name, flag)
-		if err != nil {
-			log.Fatalf("Error initializing viper: %v", err)
-		}
-	})
-	command.PersistentFlags().VisitAll(func(flag *pflag.Flag) {
-		err := viper.BindPFlag(command.Name()+"."+flag.Name, flag)
+	command.Flags().VisitAll(func(flag *pflag.Flag) {
+		err := viper.BindPFlag(commandToConfigString(command)+"."+flag.Name, flag)
 		if err != nil {
 			log.Fatalf("Error initializing viper: %v", err)
 		}
@@ -83,4 +96,32 @@ func writeDefaultsAs(path string) error {
 
 func getDefault(key string) any {
 	return viper.Get(key)
+}
+
+//* I refuse to remove this comment as i will probably need it in the future, you have no idea how much pain this has caused me.
+/* func commandToConfigString(c cobra.Command) string {
+	if isRootCommand(c) {
+		return c.Name()
+	}
+	if c.Parent() == nil {
+		return ""
+	}
+	return commandToConfigString(*c.Parent()) + "." + c.Name()
+} */
+
+func commandToConfigString(c cobra.Command) string {
+	log.Infoln("Command:", c.Name())
+	configString := c.Name()
+	for parent := c.Parent(); parent != nil; parent = parent.Parent() {
+		if parent.Name() != "blutils" {
+			configString = parent.Name() + "." + configString
+		} else {
+			break
+		}
+	}
+	return configString
+}
+
+func isRootCommand(c cobra.Command) bool {
+	return c.Name() == "blutils"
 }

@@ -22,6 +22,8 @@ func init() {
 	bitflipCmd.Flags().IntP("chunk", "c", 1, "If >1, flips bits in chunks of this size")
 	bitflipCmd.Flags().BoolP("no-progress", "n", false, "Disable progress bar")
 	bitflipCmd.Flags().BoolP("extreme", "e", false, "Flips to a random byte instead")
+
+	configBindFlags(*bitflipCmd)
 }
 
 var bitflipCmd = &cobra.Command{
@@ -32,7 +34,7 @@ var bitflipCmd = &cobra.Command{
 	`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cn := cmd.Name()
+		cn := commandToConfigString(*cmd)
 		filename := args[0]
 		fileContent, err := os.ReadFile(filename)
 		if err != nil {

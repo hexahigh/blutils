@@ -20,6 +20,9 @@ var whatIsParams WhatIsParams
 func init() {
 	rootCmd.AddCommand(whatIsCmd)
 
+	whatIsCmd.Flags().String("output", "json", "Output format")
+
+	configBindFlags(*whatIsCmd)
 }
 
 var whatIsCmd = &cobra.Command{

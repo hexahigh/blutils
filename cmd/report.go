@@ -15,27 +15,19 @@ import (
 	color "github.com/hexahigh/go-lib/ansicolor"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
-
-type ReportParams struct {
-	Yaml    *bool
-	Json    *bool
-	Stdout  *bool
-	OutFile *string
-}
-
-var reportParams ReportParams
 
 func init() {
 	rootCmd.AddCommand(reportCmd)
 
-	reportParams.Yaml = reportCmd.Flags().BoolP("yaml", "y", false, "Output report in YAML format")
-	reportParams.Json = reportCmd.Flags().BoolP("json", "j", false, "Output report in JSON format")
-	reportParams.Stdout = reportCmd.Flags().BoolP("stdout", "s", false, "Output report to stdout")
-	reportParams.OutFile = reportCmd.Flags().StringP("out", "o", "report.yaml", "Output report to file, use - for stdout")
+	reportCmd.Flags().BoolP("yaml", "y", false, "Output report in YAML format")
+	reportCmd.Flags().BoolP("json", "j", false, "Output report in JSON format")
+	reportCmd.Flags().BoolP("stdout", "s", false, "Output report to stdout")
+	reportCmd.Flags().StringP("out", "o", "report.yaml", "Output report to file, use - for stdout")
 
-	reportCmd.ParseFlags(os.Args[1:])
+	configBindFlags(*reportCmd)
 }
 
 // reportCmd represents the report command
@@ -44,6 +36,7 @@ var reportCmd = &cobra.Command{
 	Short: "Creates a system report",
 	Long:  `Creates a system report`,
 	Run: func(cmd *cobra.Command, args []string) {
+		cn := commandToConfigString(*cmd)
 		type BlockDevice struct {
 			Name        string   `json:"name"`
 			MajMin      string   `json:"maj:min"`
@@ -100,26 +93,26 @@ var reportCmd = &cobra.Command{
 			log.Infoln(color.Red+"[FAIL]"+color.Reset, msg)
 		}
 
-		if *reportParams.Stdout || *reportParams.OutFile == "-" {
+		if viper.GetBool(cn+".stdout") || viper.GetString(cn+".out") == "-" {
 			log.SetLevel(log.PanicLevel)
 		}
 
 		var fileType string
-		if *reportParams.Yaml {
+		if viper.GetBool(cn + ".yaml") {
 			fileType = "yaml"
-		} else if *reportParams.Json {
+		} else if viper.GetBool(cn + ".json") {
 			fileType = "json"
 		} else {
 			fileType = "yaml"
 		}
 
-		if *reportParams.Yaml && *reportParams.Json {
+		if viper.GetBool(cn+".yaml") && viper.GetBool(cn+".json") {
 			log.Errorln("Cannot use both -Y and -J")
 			os.Exit(1)
 		}
 
-		if *reportParams.OutFile == "-" {
-			*reportParams.Stdout = true
+		if viper.GetString(cn+".out") == "-" {
+			viper.Set(cn+".stdout", true)
 		}
 
 		log.Debugln("Filetype:", fileType)
@@ -397,19 +390,19 @@ var reportCmd = &cobra.Command{
 			}
 		}
 
-		if *reportParams.Stdout {
+		if viper.GetBool(cn + ".stdout") {
 			fmt.Print(string(data))
 			return
 		} else {
 			// Write the data to the output file
-			err = os.WriteFile(*reportParams.OutFile, data, fs.ModePerm)
+			err = os.WriteFile(viper.GetString(cn+".out"), data, fs.ModePerm)
 			if err != nil {
 				log.Errorln("Error writing report to file:", err)
 				return
 			}
 
 			log.Infoln("System report completed.")
-			log.Infoln("Report written to:", out_file)
+			log.Infoln("Report written to:", viper.GetString(cn+".out"))
 			log.Warnln("The system report contains environment variables, installed packages and more! You may want to review the report if you are planning on sharing it.")
 		}
 	},

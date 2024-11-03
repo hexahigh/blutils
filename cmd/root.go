@@ -34,6 +34,7 @@ func init() {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	defer viper.WriteConfig()
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
@@ -69,10 +70,6 @@ func initConfig() {
 
 	// viper.BindPFlags(rootCmd.PersistentFlags())
 	configBindFlags(*rootCmd)
-
-	for _, c := range rootCmd.Commands() {
-		configBindFlags(*c)
-	}
 
 	//* Load env vars
 	viper.SetEnvPrefix("BLUTILS")
@@ -129,4 +126,6 @@ func initConfig() {
 			key: value,
 		}).Debug("Command Flag")
 	}
+
+	defer viper.WriteConfig()
 }
