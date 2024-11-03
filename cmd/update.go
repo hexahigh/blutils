@@ -14,23 +14,16 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"golang.org/x/mod/semver"
 )
-
-type UpdateParams struct {
-	Repo    *string
-	Tag     *string
-	TempDir *string
-}
-
-var updateParams UpdateParams
 
 func init() {
 	rootCmd.AddCommand(updateCmd)
 
-	updateParams.Repo = updateCmd.Flags().StringP("repo", "r", "hexahigh/blutils", "Repository to update from, must be hosted on github.com")
-	updateParams.Tag = updateCmd.Flags().StringP("tag", "t", "", "Force update to a specific tag")
-	updateParams.TempDir = updateCmd.Flags().StringP("temp", "T", filepath.Join(os.TempDir(), "blutils-build"), "Temporary directory")
+	updateCmd.Flags().StringP("repo", "r", "hexahigh/blutils", "Repository to update from, must be hosted on github.com")
+	updateCmd.Flags().StringP("tag", "t", "", "Force update to a specific tag")
+	updateCmd.Flags().StringP("temp", "T", filepath.Join(os.TempDir(), "blutils-build"), "Temporary directory")
 }
 
 var updateCmd = &cobra.Command{
@@ -38,6 +31,7 @@ var updateCmd = &cobra.Command{
 	Short: "Update blutils",
 	Long:  `Update blutils`,
 	Run: func(cmd *cobra.Command, args []string) {
+		cn := cmd.Name()
 		var tag string
 
 		// Check if Go is installed
@@ -47,11 +41,11 @@ var updateCmd = &cobra.Command{
 			return
 		}
 
-		if *updateParams.Tag == "" {
+		if viper.GetString(cn+".tag") == "" {
 			log.Infoln("Getting latest tag from github...")
 
 			// Get list of tags from github
-			response, err := http.Get("https://api.github.com/repos/" + *updateParams.Repo + "/git/refs/tags")
+			response, err := http.Get("https://api.github.com/repos/" + viper.GetString(cn+".repo") + "/git/refs/tags")
 			if err != nil {
 				log.Errorln("Error fetching tags from github:", err)
 				return
@@ -86,15 +80,15 @@ var updateCmd = &cobra.Command{
 
 		// Clean temp dir
 		log.Infoln("Cleaning temp dir...")
-		if err := os.RemoveAll(*updateParams.TempDir); err != nil {
+		if err := os.RemoveAll(viper.GetString(cn + ".temp")); err != nil {
 			log.Errorln("Error cleaning temp dir:", err)
 			return
 		}
 
 		// Clone
 		log.Infoln("Cloning repo...")
-		git.PlainClone(*updateParams.TempDir, false, &git.CloneOptions{
-			URL:           "https://github.com/" + *updateParams.Repo,
+		git.PlainClone(viper.GetString(cn+".temp"), false, &git.CloneOptions{
+			URL:           "https://github.com/" + viper.GetString(cn+".repo"),
 			Progress:      sideband.NewMuxer(sideband.Sideband64k, os.Stdout),
 			ReferenceName: plumbing.NewTagReferenceName(tag),
 			Depth:         1,
@@ -102,7 +96,7 @@ var updateCmd = &cobra.Command{
 
 		// Build
 		log.Infoln("Building...")
-		buildPath := filepath.Join(*updateParams.TempDir)
+		buildPath := filepath.Join(viper.GetString(cn + ".temp"))
 		command := exec.Command("go", "build", "-ldflags", "-s -w", "-o", "blutils", ".")
 		command.Dir = buildPath
 		output, err := command.CombinedOutput()
@@ -129,7 +123,7 @@ var updateCmd = &cobra.Command{
 		}
 
 		log.Infoln("Cleaning up...")
-		if err := os.RemoveAll(*updateParams.TempDir); err != nil {
+		if err := os.RemoveAll(viper.GetString(cn + ".temp")); err != nil {
 			log.Errorln("Error removing temp dir:", err)
 		}
 		if err := os.Remove(oldExePath); err != nil {

@@ -10,28 +10,18 @@ import (
 	"github.com/schollz/progressbar/v3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
-
-type BitflipParams struct {
-	BitsToFlip *int
-	Percentage *int
-	MinOffset  *int
-	ChunkSize  *int
-	NoProgress *bool
-	Extreme    *bool
-}
-
-var bitflipParams BitflipParams
 
 func init() {
 	rootCmd.AddCommand(bitflipCmd)
 
-	bitflipParams.BitsToFlip = bitflipCmd.Flags().IntP("bits", "b", 0, "Number of bits to flip")
-	bitflipParams.Percentage = bitflipCmd.Flags().IntP("percentage", "p", 0, "Percentage of bits to flip (Will be ignored if 0 or if --bits is set)")
-	bitflipParams.MinOffset = bitflipCmd.Flags().IntP("min-offset", "m", 0, "Minimum offset")
-	bitflipParams.ChunkSize = bitflipCmd.Flags().IntP("chunk", "c", 1, "If >1, flips bits in chunks of this size")
-	bitflipParams.NoProgress = bitflipCmd.Flags().BoolP("no-progress", "n", false, "Disable progress bar")
-	bitflipParams.Extreme = bitflipCmd.Flags().BoolP("extreme", "e", false, "Flips to a random byte instead")
+	bitflipCmd.Flags().IntP("bits", "b", 0, "Number of bits to flip")
+	bitflipCmd.Flags().IntP("percentage", "p", 0, "Percentage of bits to flip (Will be ignored if 0 or if --bits is set)")
+	bitflipCmd.Flags().IntP("min-offset", "m", 0, "Minimum offset")
+	bitflipCmd.Flags().IntP("chunk", "c", 1, "If >1, flips bits in chunks of this size")
+	bitflipCmd.Flags().BoolP("no-progress", "n", false, "Disable progress bar")
+	bitflipCmd.Flags().BoolP("extreme", "e", false, "Flips to a random byte instead")
 }
 
 var bitflipCmd = &cobra.Command{
@@ -42,6 +32,7 @@ var bitflipCmd = &cobra.Command{
 	`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		cn := cmd.Name()
 		filename := args[0]
 		fileContent, err := os.ReadFile(filename)
 		if err != nil {
@@ -52,22 +43,22 @@ var bitflipCmd = &cobra.Command{
 
 		log.Debugln("maxPos:", maxPos)
 
-		if *bitflipParams.Percentage > 0 && *bitflipParams.BitsToFlip == 0 {
-			bitsToFlip := maxPos.Int64() * int64(*bitflipParams.Percentage) / 100
-			*bitflipParams.BitsToFlip = int(bitsToFlip)
+		if viper.GetInt(cn+".percentage") > 0 && viper.GetInt(cn+".bits") == 0 {
+			bitsToFlip := maxPos.Int64() * int64(viper.GetInt(cn+".percentage")) / 100
+			viper.Set(cn+".bits", bitsToFlip)
 		}
 
 		var pb *progressbar.ProgressBar
 
-		if !*bitflipParams.NoProgress {
-			pb = progressbar.Default(int64(*bitflipParams.BitsToFlip))
+		if !viper.GetBool(cn + ".no-progress") {
+			pb = progressbar.Default(viper.GetInt64(cn + ".bits"))
 		}
 
-		bitsToFlip := *bitflipParams.BitsToFlip
+		bitsToFlip := viper.GetInt64(cn + ".bits")
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-		for i := 0; i < bitsToFlip; i++ {
+		for i := 0; i < int(bitsToFlip); i++ {
 			select {
 			case <-sigChan:
 				log.Infoln("Interrupt received, saving file...")
@@ -84,12 +75,12 @@ var bitflipCmd = &cobra.Command{
 					log.Errorf("Failed to generate random number: %v", err)
 				}
 
-				if *bitflipParams.MinOffset != 0 && pos.Int64() < int64(*bitflipParams.MinOffset) {
+				if viper.GetInt64(cn+".min-offset") != 0 && pos.Int64() < int64(viper.GetInt(cn+".min-offset")) {
 					i-- // Decrement counter to retry this iteration
 					continue
 				}
 
-				if *bitflipParams.Extreme {
+				if viper.GetBool(cn + ".extreme") {
 					randomByte := make([]byte, 1)
 					_, err = rand.Read(randomByte)
 					if err != nil {
@@ -100,8 +91,8 @@ var bitflipCmd = &cobra.Command{
 					// Perform bit flip
 					fileContent[pos.Int64()] ^= 1
 
-					if *bitflipParams.ChunkSize > 1 && pos.Int64()+int64(*bitflipParams.ChunkSize) < maxPos.Int64() {
-						for j := 0; j < *bitflipParams.ChunkSize; j++ {
+					if viper.GetInt64(cn+".chunk") > 1 && pos.Int64()+int64(viper.GetInt64(cn+".chunk")) < maxPos.Int64() {
+						for j := 0; j < viper.GetInt(cn+".chunk"); j++ {
 							fileContent[pos.Int64()+int64(j)] ^= 1
 						}
 					}
@@ -118,6 +109,6 @@ var bitflipCmd = &cobra.Command{
 			log.Errorln("Failed to save file:", err)
 		}
 
-		log.Infoln(bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
+		log.Infoln(bitsToFlip*viper.GetInt64(cn+".chunk"), "bits flipped")
 	},
 }

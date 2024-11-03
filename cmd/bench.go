@@ -10,20 +10,14 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
-
-type BenchParams struct {
-	CpuWorkers *int
-	Timeout    *int
-}
-
-var benchParams BenchParams
 
 func init() {
 	rootCmd.AddCommand(benchCmd)
 
-	benchParams.CpuWorkers = benchCmd.Flags().IntP("cpu", "c", 0, "Number of CPU workers")
-	benchParams.Timeout = benchCmd.Flags().IntP("timeout", "t", 10, "Maximum time in seconds")
+	benchCmd.Flags().IntP("cpu", "c", 0, "Number of CPU workers")
+	benchCmd.Flags().IntP("timeout", "t", 10, "Maximum time in seconds")
 
 	benchCmd.ParseFlags(os.Args[1:])
 }
@@ -33,28 +27,29 @@ var benchCmd = &cobra.Command{
 	Short: "Simple benchmarking tool",
 	Long:  `Simple benchmarking tool`,
 	Run: func(cmd *cobra.Command, args []string) {
+		cn := cmd.Name()
 		startTime := time.Now()
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
 		var wg sync.WaitGroup
-		opsCount := make(chan int, *benchParams.CpuWorkers)
+		opsCount := make(chan int, viper.GetInt(cn+".cpu"))
 		done := make(chan bool)
 
 		go func() {
 			log.Infoln("Starting timer")
-			if *benchParams.Timeout > 0 {
-				time.Sleep(time.Duration(*benchParams.Timeout) * time.Second)
+			if viper.GetInt(cn+".timeout") > 0 {
+				time.Sleep(time.Duration(viper.GetInt(cn+".timeout")) * time.Second)
 				cancel()
 			}
 		}()
 
-		if *benchParams.CpuWorkers > 0 {
-			log.Infof("Starting %d CPU workers\n", *benchParams.CpuWorkers)
+		if viper.GetInt(cn+".cpu") > 0 {
+			log.Infof("Starting %d CPU workers\n", viper.GetInt(cn+".cpu"))
 		}
 
-		for i := 0; i < *benchParams.CpuWorkers; i++ {
+		for i := 0; i < viper.GetInt(cn+".cpu"); i++ {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
