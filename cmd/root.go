@@ -129,4 +129,12 @@ func initDefaults() {
 	viper.SetDefault("verbosity", 4)
 	viper.SetDefault("config-dir", getDefaultConfigDir())
 	viper.SetDefault("config-file", "config.toml")
+	viper.SetDefault("output", "text")
+	viper.SetDefault("forceColors", false)
+	viper.SetDefault("disableColors", false)
+	viper.SetDefault("disableLevelTruncation", false)
+	viper.SetDefault("padLevelText", true)
+	viper.SetDefault("fullTimestamp", false)
+	viper.SetDefault("disableTimestamp", false)
+	viper.SetDefault("prettyPrint", false)
 }
