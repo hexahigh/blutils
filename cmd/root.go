@@ -55,8 +55,8 @@ func initConfig() {
 	initDefaults() // Set default viper values
 	//* Load flags
 	rootCmd.PersistentFlags().Int8P("verbosity", "v", 4, "verbosity level. 0=panic, 1=fatal, 2=error, 3=warn, 4=info, 5=debug, 6=trace")
-	rootCmd.PersistentFlags().StringP("config-dir", "d", getDefaultConfigDir(), "Directory containing data and config files")
-	rootCmd.PersistentFlags().StringP("config-file", "c", "config.toml", "Name of the config file, with extension")
+	rootCmd.PersistentFlags().StringP("config-dir", "D", getDefaultConfigDir(), "Directory containing data and config files")
+	rootCmd.PersistentFlags().StringP("config-file", "C", "config.toml", "Name of the config file, with extension")
 	rootCmd.PersistentFlags().String("output", "text", "Output mode. Supported values are: text, json")
 	rootCmd.PersistentFlags().Bool("forceColors", false, "Force colors in log output. Only works if output mode is Text")
 	rootCmd.PersistentFlags().Bool("disableColors", false, "Disable colors in log output. Only works if output mode is Text")
