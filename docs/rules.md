@@ -1,18 +1,28 @@
 # General Rules
 
-### Parameters
+## Parameters
 
-- Parameters must be put in a struct.
-
-- To prevent name collision, parameter should be prefixed with the command name, for example, `report.go`'s struct should be named `ReportParams`.
-
-- Parameter variable names should start with lowercase while struct names should start with uppercase, for example:
-```go
- type ReportParams struct {
-    /* Parameters here */
-}
-
-var reportParams ReportParams
-```
-
-- Parameters should be passed as pointers.
+- When retrieving values from the configuration, it's essential to use the commandToConfigString function to ensure consistency and avoid hardcoding. This approach enables easier maintenance and updates to the configuration.
+  #### Correct Usage
+  ```go
+  var exampleCmd = &cobra.Command{
+  	Use:   "example",
+  	Short: "foo bar",
+  	Long:  `hello world`,
+  	Run: func(cmd *cobra.Command, args []string) {
+            cn := commandToConfigString(*cmd)
+            fmt.Println(viper.GetString(cn+".message"))
+    },
+  }
+  ```
+  #### Incorrect Usage (Avoid)
+  ```go
+  var exampleCmd = &cobra.Command{
+  	Use:   "example",
+  	Short: "foo bar",
+  	Long:  `hello world`,
+  	Run: func(cmd *cobra.Command, args []string) {
+            fmt.Println(viper.GetString("example.message"))
+      },
+  }
+  ```
