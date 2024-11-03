@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +43,7 @@ var benchCmd = &cobra.Command{
 		done := make(chan bool)
 
 		go func() {
-			Log.Infoln("Starting timer")
+			log.Infoln("Starting timer")
 			if *benchParams.Timeout > 0 {
 				time.Sleep(time.Duration(*benchParams.Timeout) * time.Second)
 				cancel()
@@ -50,7 +51,7 @@ var benchCmd = &cobra.Command{
 		}()
 
 		if *benchParams.CpuWorkers > 0 {
-			Log.Infof("Starting %d CPU workers\n", *benchParams.CpuWorkers)
+			log.Infof("Starting %d CPU workers\n", *benchParams.CpuWorkers)
 		}
 
 		for i := 0; i < *benchParams.CpuWorkers; i++ {
@@ -93,8 +94,8 @@ var benchCmd = &cobra.Command{
 			totalOps += ops
 		}
 
-		Log.Infof("Ran for %.2f seconds\n", duration)
-		Log.Infof("Total operations: %d\n", totalOps)
-		Log.Infof("Operations per second: %.2f\n", float64(totalOps)/float64(duration))
+		log.Infof("Ran for %.2f seconds\n", duration)
+		log.Infof("Total operations: %d\n", totalOps)
+		log.Infof("Operations per second: %.2f\n", float64(totalOps)/float64(duration))
 	},
 }

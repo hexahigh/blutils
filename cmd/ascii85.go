@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -31,23 +32,23 @@ It is more efficient than base64, base64 increases the size of the data by 33% w
 	Run: func(cmd *cobra.Command, args []string) {
 		inputReader, err := getInputReader(*ascii85Params.InFile)
 		if err != nil {
-			Log.Errorf("Failed to open input: %v", err)
+			log.Errorf("Failed to open input: %v", err)
 		}
 
 		outputWriter, err := getOutputWriter(*ascii85Params.OutFile)
 		if err != nil {
-			Log.Errorf("Failed to open output: %v", err)
+			log.Errorf("Failed to open output: %v", err)
 		}
 
 		if *ascii85Params.Decode {
 			decoder := ascii85.NewDecoder(inputReader)
 			if _, err := io.Copy(outputWriter, decoder); err != nil {
-				Log.Errorf("Failed to decode: %v", err)
+				log.Errorf("Failed to decode: %v", err)
 			}
 		} else {
 			encoder := ascii85.NewEncoder(outputWriter)
 			if _, err := io.Copy(encoder, inputReader); err != nil {
-				Log.Errorf("Failed to encode: %v", err)
+				log.Errorf("Failed to encode: %v", err)
 			}
 		}
 

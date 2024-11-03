@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"crypto/rand"
-	"log"
 	"math/big"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/schollz/progressbar/v3"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -50,7 +50,7 @@ var bitflipCmd = &cobra.Command{
 
 		maxPos := big.NewInt(int64(len(fileContent)))
 
-		Log.Debugf("maxPos:", maxPos)
+		log.Debugf("maxPos:", maxPos)
 
 		if *bitflipParams.Percentage > 0 && *bitflipParams.BitsToFlip == 0 {
 			bitsToFlip := maxPos.Int64() * int64(*bitflipParams.Percentage) / 100
@@ -70,18 +70,18 @@ var bitflipCmd = &cobra.Command{
 		for i := 0; i < bitsToFlip; i++ {
 			select {
 			case <-sigChan:
-				Log.Infoln("Interrupt received, saving file...")
+				log.Infoln("Interrupt received, saving file...")
 				err = os.WriteFile(filename, fileContent, 0644)
 				if err != nil {
-					Log.Errorln("Failed to save file:", err)
+					log.Errorln("Failed to save file:", err)
 				} else {
-					Log.Infoln("File saved successfully.")
+					log.Infoln("File saved successfully.")
 				}
 				os.Exit(0)
 			default:
 				pos, err := rand.Int(rand.Reader, maxPos)
 				if err != nil {
-					Log.Errorln("Failed to generate random number: %v", err)
+					log.Errorln("Failed to generate random number: %v", err)
 				}
 
 				if *bitflipParams.MinOffset != 0 && pos.Int64() < int64(*bitflipParams.MinOffset) {
@@ -93,7 +93,7 @@ var bitflipCmd = &cobra.Command{
 					randomByte := make([]byte, 1)
 					_, err = rand.Read(randomByte)
 					if err != nil {
-						Log.Errorln("Failed to generate random byte: %v", err)
+						log.Errorln("Failed to generate random byte: %v", err)
 					}
 					fileContent[pos.Int64()] = randomByte[0]
 				} else {
@@ -108,16 +108,16 @@ var bitflipCmd = &cobra.Command{
 				}
 
 				pb.Add(1)
-				Log.Debugf("Flipped at offset", pos.Int64())
+				log.Debugf("Flipped at offset", pos.Int64())
 			}
 		}
 
 		// Save file after all bits have been flipped
 		err = os.WriteFile(filename, fileContent, 0644)
 		if err != nil {
-			Log.Errorln("Failed to save file:", err)
+			log.Errorln("Failed to save file:", err)
 		}
 
-		Log.Infoln(bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
+		log.Infoln(bitsToFlip**bitflipParams.ChunkSize, "bits flipped")
 	},
 }

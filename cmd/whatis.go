@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/hexahigh/go-lib/ctinfo"
 	"github.com/hexahigh/go-lib/sniff"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -40,14 +40,14 @@ var whatIsCmd = &cobra.Command{
 		for _, filePath := range args {
 			// Skip if file is a directory
 			if info, err := os.Stat(filePath); err == nil && info.IsDir() {
-				Log.Debugln("Skipping directory:", filePath)
+				log.Debugln("Skipping directory:", filePath)
 				continue
 			}
 
 			// Read the first 1024 bytes of the file
 			file, err := os.Open(filePath)
 			if err != nil {
-				Log.Errorln("Failed to read file:", err)
+				log.Errorln("Failed to read file:", err)
 			}
 
 			defer file.Close()

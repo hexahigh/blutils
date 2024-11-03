@@ -12,6 +12,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
 )
@@ -42,17 +43,17 @@ var updateCmd = &cobra.Command{
 		// Check if Go is installed
 		_, err := exec.LookPath("go")
 		if err != nil {
-			Log.Errorln("Go is not installed")
+			log.Errorln("Go is not installed")
 			return
 		}
 
 		if *updateParams.Tag == "" {
-			Log.Infoln("Getting latest tag from github...")
+			log.Infoln("Getting latest tag from github...")
 
 			// Get list of tags from github
 			response, err := http.Get("https://api.github.com/repos/" + *updateParams.Repo + "/git/refs/tags")
 			if err != nil {
-				Log.Errorln("Error fetching tags from github:", err)
+				log.Errorln("Error fetching tags from github:", err)
 				return
 			}
 			defer response.Body.Close()
@@ -65,7 +66,7 @@ var updateCmd = &cobra.Command{
 			var refs []string
 
 			if err := json.NewDecoder(response.Body).Decode(&tagReferences); err != nil {
-				Log.Errorln("Error decoding JSON response:", err)
+				log.Errorln("Error decoding JSON response:", err)
 				return
 			}
 
@@ -75,23 +76,23 @@ var updateCmd = &cobra.Command{
 			// Sort tags
 			semver.Sort(refs)
 
-			Log.Debugln("Tags:", refs)
+			log.Debugln("Tags:", refs)
 
 			// Get latest tag
 			tag = refs[len(refs)-1]
 		}
 
-		Log.Infoln("Using tag:", tag)
+		log.Infoln("Using tag:", tag)
 
 		// Clean temp dir
-		Log.Infoln("Cleaning temp dir...")
+		log.Infoln("Cleaning temp dir...")
 		if err := os.RemoveAll(*updateParams.TempDir); err != nil {
-			Log.Errorln("Error cleaning temp dir:", err)
+			log.Errorln("Error cleaning temp dir:", err)
 			return
 		}
 
 		// Clone
-		Log.Infoln("Cloning repo...")
+		log.Infoln("Cloning repo...")
 		git.PlainClone(*updateParams.TempDir, false, &git.CloneOptions{
 			URL:           "https://github.com/" + *updateParams.Repo,
 			Progress:      sideband.NewMuxer(sideband.Sideband64k, os.Stdout),
@@ -100,40 +101,40 @@ var updateCmd = &cobra.Command{
 		})
 
 		// Build
-		Log.Infoln("Building...")
+		log.Infoln("Building...")
 		buildPath := filepath.Join(*updateParams.TempDir)
 		command := exec.Command("go", "build", "-ldflags", "-s -w", "-o", "blutils", ".")
 		command.Dir = buildPath
 		output, err := command.CombinedOutput()
 		if err != nil {
-			Log.Errorln("Error during build:", err)
-			Log.Errorln("Build output:", string(output))
+			log.Errorln("Error during build:", err)
+			log.Errorln("Build output:", string(output))
 			return
 		}
-		Log.Infoln("Build successful")
+		log.Infoln("Build successful")
 
 		exePath, _ := os.Executable()
 		oldExePath := exePath + ".bak"
 
-		Log.Infoln("Moving old executable to:", oldExePath)
+		log.Infoln("Moving old executable to:", oldExePath)
 		if err := os.Rename(exePath, oldExePath); err != nil {
-			Log.Errorln("Error moving old executable:", err)
+			log.Errorln("Error moving old executable:", err)
 			return
 		}
 
-		Log.Infoln("Moving new executable to:", exePath)
+		log.Infoln("Moving new executable to:", exePath)
 		if err := os.Rename(filepath.Join(buildPath, "blutils"), exePath); err != nil {
-			Log.Errorln("Error moving new executable:", err)
+			log.Errorln("Error moving new executable:", err)
 			return
 		}
 
-		Log.Infoln("Cleaning up...")
+		log.Infoln("Cleaning up...")
 		if err := os.RemoveAll(*updateParams.TempDir); err != nil {
-			Log.Errorln("Error removing temp dir:", err)
+			log.Errorln("Error removing temp dir:", err)
 		}
 		if err := os.Remove(oldExePath); err != nil {
-			Log.Errorln("Error removing old executable:", err)
+			log.Errorln("Error removing old executable:", err)
 		}
-		Log.Infoln("Update successful")
+		log.Infoln("Update successful")
 	},
 }
